@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: su.nsk.iae.edtl.ui
+Bundle-ManifestVersion: 2
+Bundle-Name: su.nsk.iae.edtl.ui
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: su.nsk.iae.edtl.ui; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: su.nsk.iae.edtl,
+ su.nsk.iae.edtl.ide,
+ org.eclipse.xtext.ui,
+ org.eclipse.xtext.ui.shared,
+ org.eclipse.xtext.ui.codetemplates.ui,
+ org.eclipse.ui.editors;bundle-version="3.14.300",
+ org.eclipse.ui.ide;bundle-version="3.18.500",
+ org.eclipse.ui,
+ org.eclipse.compare,
+ org.eclipse.xtext.builder
+Import-Package: org.apache.log4j
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: su.nsk.iae.edtl.ui.contentassist,
+ su.nsk.iae.edtl.ui.quickfix,
+ su.nsk.iae.edtl.ui.internal
+Bundle-Activator: su.nsk.iae.edtl.ui.internal.EdtlActivator

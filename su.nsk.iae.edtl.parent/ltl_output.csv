@@ -1,0 +1,4 @@
+" ","req name","trigger","invariant","final","delay","reaction","release","LTL formula"
+"1","NAME","(H ∨ D)","(D ∨ (H ∧ D))","D","H","((H ∧ D) ∧ H)","(((H ∨ D) ∨ D) ∨ H)","G((((H ∨ D) ∧ ¬(((H ∨ D) ∨ D) ∨ H)) → (((D ∨ (H ∧ D)) ∧ ¬D) U ((((H ∨ D) ∨ D) ∨ H) ∨ (D ∧ (((D ∨ (H ∧ D)) ∧ ¬H) U ((((H ∨ D) ∨ D) ∨ H) ∨ ((D ∨ (H ∧ D)) ∧ ((H ∧ D) ∧ H)))))))))"
+"2","NAME3","(H ∨ D)","(D ∨ (H ∧ D))","D","H","((H ∧ D) ∧ H)","(((H ∨ D) ∨ D) ∨ H)","G((((H ∨ D) ∧ ¬(((H ∨ D) ∨ D) ∨ H)) → (((D ∨ (H ∧ D)) ∧ ¬D) U ((((H ∨ D) ∨ D) ∨ H) ∨ (D ∧ (((D ∨ (H ∧ D)) ∧ ¬H) U ((((H ∨ D) ∨ D) ∨ H) ∨ ((D ∨ (H ∧ D)) ∧ ((H ∧ D) ∧ H)))))))))"
+"3","NAME2","(H ∨ D)","(D ∨ (H ∧ D))","D","H","((H ∧ D) ∧ H)","(((H ∨ D) ∨ D) ∨ H)","G((((H ∨ D) ∧ ¬(((H ∨ D) ∨ D) ∨ H)) → (((D ∨ (H ∧ D)) ∧ ¬D) U ((((H ∨ D) ∨ D) ∨ H) ∨ (D ∧ (((D ∨ (H ∧ D)) ∧ ¬H) U ((((H ∨ D) ∨ D) ∨ H) ∨ ((D ∨ (H ∧ D)) ∧ ((H ∧ D) ∧ H)))))))))"

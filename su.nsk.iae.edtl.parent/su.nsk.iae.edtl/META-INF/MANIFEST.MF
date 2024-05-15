@@ -1,0 +1,30 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: su.nsk.iae.edtl
+Bundle-ManifestVersion: 2
+Bundle-Name: su.nsk.iae.edtl
+Bundle-Vendor: Institute of Automation and Electrometry SB RAS
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: su.nsk.iae.edtl; singleton:=true
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: opencsv-5.7.1.jar,
+ .
+Require-Bundle: org.eclipse.xtext,
+ org.eclipse.xtext.xbase,
+ org.eclipse.equinox.common;bundle-version="3.16.0",
+ org.eclipse.emf.ecore,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.34.0",
+ org.eclipse.emf.common,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: su.nsk.iae.edtl.services,
+ su.nsk.iae.edtl.scoping,
+ su.nsk.iae.edtl.generator,
+ su.nsk.iae.edtl.edtl.impl,
+ su.nsk.iae.edtl.validation,
+ su.nsk.iae.edtl.parser.antlr,
+ su.nsk.iae.edtl.parser.antlr.internal,
+ su.nsk.iae.edtl.edtl,
+ su.nsk.iae.edtl.serializer,
+ su.nsk.iae.edtl.edtl.util,
+ su.nsk.iae.edtl
+Import-Package: org.apache.log4j
