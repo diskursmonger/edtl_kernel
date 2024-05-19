@@ -1,0 +1,8 @@
+# Mac DS_Store Files
+.DS_Store
+
+# Eclipse app
+Eclipse.app/
+
+# Metadata
+.metadata/
