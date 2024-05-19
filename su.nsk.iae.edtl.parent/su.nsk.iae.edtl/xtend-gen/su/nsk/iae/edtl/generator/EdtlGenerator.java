@@ -44,8 +44,6 @@ import su.nsk.iae.edtl.edtl.XorExpression;
 public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
   private final ArrayList<String> headerCsv = CollectionLiterals.<String>newArrayList(" ", "req name", "trigger", "invariant", "final", "delay", "reaction", "release", "LTL formula", "Substituted LTL formula");
 
-  private String globalInterval = "";
-
   public static void initGenerators() {
   }
 
@@ -76,28 +74,28 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       csvWriter.writeNext(((String[])Conversions.unwrapArray(this.headerCsv, String.class)));
       final Model ast = ((Model[])Conversions.unwrapArray((Iterables.<Model>filter(IteratorExtensions.<EObject>toIterable(resource.getAllContents()), Model.class)), Model.class))[0];
       final EList<Requirement> reqs = ast.getReqs();
-      this.globalInterval = ast.getGlobInterval().getGlobInterval().getInterval();
+      String globalTimeInterval = ast.getGlobInterval().getGlobInterval().getInterval();
       int reqNum = 1;
       for (final Requirement req : reqs) {
         {
           Expression _trigExpr = req.getTrigExpr();
           BoolTerm _boolTerm = new BoolTerm(true);
-          Term trigger = this.convertExprToTermOrDefault(_trigExpr, _boolTerm);
+          Term trigger = ExprToTermConverter.convertOrDefault(_trigExpr, Attribute.TRIGGER, _boolTerm);
           Expression _invExpr = req.getInvExpr();
           BoolTerm _boolTerm_1 = new BoolTerm(true);
-          Term invariant = this.convertExprToTermOrDefault(_invExpr, _boolTerm_1);
+          Term invariant = ExprToTermConverter.convertOrDefault(_invExpr, Attribute.INVARIANT, _boolTerm_1);
           Expression _finalExpr = req.getFinalExpr();
           BoolTerm _boolTerm_2 = new BoolTerm(false);
-          Term fin = this.convertExprToTermOrDefault(_finalExpr, _boolTerm_2);
+          Term fin = ExprToTermConverter.convertOrDefault(_finalExpr, Attribute.FINAL, _boolTerm_2);
           Expression _delayExpr = req.getDelayExpr();
           BoolTerm _boolTerm_3 = new BoolTerm(false);
-          Term delay = this.convertExprToTermOrDefault(_delayExpr, _boolTerm_3);
+          Term delay = ExprToTermConverter.convertOrDefault(_delayExpr, Attribute.DELAY, _boolTerm_3);
           Expression _reacExpr = req.getReacExpr();
           BoolTerm _boolTerm_4 = new BoolTerm(true);
-          Term reaction = this.convertExprToTermOrDefault(_reacExpr, _boolTerm_4);
+          Term reaction = ExprToTermConverter.convertOrDefault(_reacExpr, Attribute.REACTION, _boolTerm_4);
           Expression _relExpr = req.getRelExpr();
           BoolTerm _boolTerm_5 = new BoolTerm(false);
-          Term release = this.convertExprToTermOrDefault(_relExpr, _boolTerm_5);
+          Term release = ExprToTermConverter.convertOrDefault(_relExpr, Attribute.RELEASE, _boolTerm_5);
           final Term x0 = this.con(trigger, this.no(release));
           final Term x1 = this.con(invariant, reaction);
           final Term x2 = this.dis(release, x1);
@@ -149,14 +147,14 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
           String out = (_plus_21 + "\n");
           System.out.println(out);
           final ArrayList<String> csvRow = CollectionLiterals.<String>newArrayList(Integer.valueOf(reqNum).toString(), req.getName(), 
-            this.convertTermToString(trigger, Boolean.valueOf(false)), 
-            this.convertTermToString(invariant, Boolean.valueOf(false)), 
-            this.convertTermToString(fin, Boolean.valueOf(false)), 
-            this.convertTermToString(delay, Boolean.valueOf(false)), 
-            this.convertTermToString(reaction, Boolean.valueOf(false)), 
-            this.convertTermToString(release, Boolean.valueOf(false)), 
-            this.convertTermToString(ltl_formula, Boolean.valueOf(false)), 
-            this.convertTermToString(ltl_formula, Boolean.valueOf(true)));
+            TermToStringConverter.convert(trigger, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(invariant, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(fin, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(delay, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(reaction, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(release, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(ltl_formula, globalTimeInterval, TimeRepresentation.PASSED), 
+            TermToStringConverter.convert(ltl_formula, globalTimeInterval, TimeRepresentation.INTERVAL));
           csvWriter.writeNext(((String[])Conversions.unwrapArray(csvRow, String.class)));
           reqNum++;
         }
@@ -167,118 +165,6 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
-  }
-
-  private Term convertExprToTermOrDefault(final Expression expr, final Term defaultTerm) {
-    Term _xifexpression = null;
-    if ((expr != null)) {
-      _xifexpression = this.convertExprToTerm(expr);
-    } else {
-      _xifexpression = defaultTerm;
-    }
-    return _xifexpression;
-  }
-
-  private Term convertExprToTerm(final Expression expr) {
-    if ((expr == null)) {
-      throw new NullPointerException("Expression is null");
-    }
-    if ((expr instanceof PrimaryExpression)) {
-      return this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression)expr));
-    }
-    if ((expr instanceof UnExpression)) {
-      return this.convertUnaryExprToUnaryTerm(((UnExpression)expr));
-    }
-    if ((expr instanceof AndExpression)) {
-      Term _convertExprToTerm = this.convertExprToTerm(((AndExpression)expr).getLeft());
-      Term _convertExprToTerm_1 = this.convertExprToTerm(((AndExpression)expr).getRight());
-      return new AndTerm(_convertExprToTerm, _convertExprToTerm_1);
-    }
-    String _orOp = expr.getOrOp();
-    boolean _tripleNotEquals = (_orOp != null);
-    if (_tripleNotEquals) {
-      Term _convertExprToTerm_2 = this.convertExprToTerm(expr.getLeft());
-      Term _convertExprToTerm_3 = this.convertExprToTerm(expr.getRight());
-      return new OrTerm(_convertExprToTerm_2, _convertExprToTerm_3);
-    }
-    throw new IllegalArgumentException("Unsupported expression type");
-  }
-
-  private PrimaryTerm convertPrimaryExprToPrimaryTerm(final PrimaryExpression expr) {
-    if ((expr == null)) {
-      throw new NullPointerException("Expression is null");
-    }
-    boolean _equals = "FALSE".equals(expr.getConstant());
-    if (_equals) {
-      return new BoolTerm(false);
-    }
-    boolean _equals_1 = "TRUE".equals(expr.getConstant());
-    if (_equals_1) {
-      return new BoolTerm(true);
-    }
-    TauExpression _tau = expr.getTau();
-    boolean _tripleNotEquals = (_tau != null);
-    if (_tripleNotEquals) {
-      String _valueOf = String.valueOf(expr.getTau().getTime().getInterval());
-      return new TimeTerm(_valueOf);
-    }
-    CrossVarAbbr _v = expr.getV();
-    boolean _tripleNotEquals_1 = (_v != null);
-    if (_tripleNotEquals_1) {
-      String _name = expr.getV().getName();
-      return new VarTerm(_name);
-    }
-    Expression _nestExpr = expr.getNestExpr();
-    boolean _tripleNotEquals_2 = (_nestExpr != null);
-    if (_tripleNotEquals_2) {
-      Term _convertExprToTerm = this.convertExprToTerm(expr.getNestExpr());
-      return new NestTerm(_convertExprToTerm);
-    }
-    throw new IllegalArgumentException("Unsupported primary expression type");
-  }
-
-  private UnaryTerm convertUnaryExprToUnaryTerm(final UnExpression expr) {
-    if ((expr == null)) {
-      throw new NullPointerException("Expression is null");
-    }
-    if ((expr.getUnOp().equals("NOT") || expr.getUnOp().equals("!"))) {
-      XorExpression _right = expr.getRight();
-      PrimaryTerm _convertPrimaryExprToPrimaryTerm = this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression) _right));
-      return new NotTerm(_convertPrimaryExprToPrimaryTerm);
-    }
-    boolean _equals = expr.getUnOp().equals("FE");
-    if (_equals) {
-      XorExpression _right_1 = expr.getRight();
-      PrimaryTerm _convertPrimaryExprToPrimaryTerm_1 = this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression) _right_1));
-      return new FeTerm(_convertPrimaryExprToPrimaryTerm_1);
-    }
-    boolean _equals_1 = expr.getUnOp().equals("RE");
-    if (_equals_1) {
-      XorExpression _right_2 = expr.getRight();
-      PrimaryTerm _convertPrimaryExprToPrimaryTerm_2 = this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression) _right_2));
-      return new ReTerm(_convertPrimaryExprToPrimaryTerm_2);
-    }
-    boolean _equals_2 = expr.getUnOp().equals("HIGH");
-    if (_equals_2) {
-      XorExpression _right_3 = expr.getRight();
-      PrimaryTerm _convertPrimaryExprToPrimaryTerm_3 = this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression) _right_3));
-      return new HighTerm(_convertPrimaryExprToPrimaryTerm_3);
-    }
-    boolean _equals_3 = expr.getUnOp().equals("LOW");
-    if (_equals_3) {
-      XorExpression _right_4 = expr.getRight();
-      PrimaryTerm _convertPrimaryExprToPrimaryTerm_4 = this.convertPrimaryExprToPrimaryTerm(((PrimaryExpression) _right_4));
-      return new LowTerm(_convertPrimaryExprToPrimaryTerm_4);
-    }
-    throw new IllegalArgumentException("Unsupported unary expression type");
-  }
-
-  private String substituteTauCalcResult() {
-    return "";
-  }
-
-  private String calcTauResult() {
-    return null;
   }
 
   private String convertTermToString(final Term term, final Boolean value) {

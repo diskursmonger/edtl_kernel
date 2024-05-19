@@ -26,6 +26,10 @@ import su.nsk.iae.edtl.edtl.impl.PrimaryExpressionImpl
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.util.EcoreUtil.Copier
 import java.util.Objects
+import java.util.regex.Pattern
+import java.util.Map
+import java.time.Duration
+import java.time.temporal.TemporalUnit
 
 /**
  * Generates code from your model files on save.
@@ -39,7 +43,6 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 	
 	val headerCsv = newArrayList(" ", "req name", "trigger", "invariant", "final", "delay", "reaction", "release", "LTL formula", "Substituted LTL formula")
 	
-	var String globalInterval = ""
 	// + expanded LTL
 	
 	// Init expansion modules
@@ -90,17 +93,17 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 					get(0)
 		val reqs = ast.reqs
 		
-		globalInterval = ast.globInterval.globInterval.interval // format: 1h1m1s1ms
+		var globalTimeInterval = ast.globInterval.globInterval.interval // format: 1h1m1s1ms
 	
 		var reqNum = 1
 		
 		for (req : reqs) {
-			var trigger = convertExprToTermOrDefault(req.trigExpr, new BoolTerm(true))
-			var invariant = convertExprToTermOrDefault(req.invExpr, new BoolTerm(true))
-			var fin = convertExprToTermOrDefault(req.finalExpr, new BoolTerm(false))
-			var delay = convertExprToTermOrDefault(req.delayExpr, new BoolTerm(false))
-			var reaction = convertExprToTermOrDefault(req.reacExpr, new BoolTerm(true))
-			var release = convertExprToTermOrDefault(req.relExpr, new BoolTerm(false))
+			var trigger = ExprToTermConverter.convertOrDefault(req.trigExpr, Attribute.TRIGGER, new BoolTerm(true))
+			var invariant = ExprToTermConverter.convertOrDefault(req.invExpr, Attribute.INVARIANT, new BoolTerm(true))
+			var fin = ExprToTermConverter.convertOrDefault(req.finalExpr, Attribute.FINAL, new BoolTerm(false))
+			var delay = ExprToTermConverter.convertOrDefault(req.delayExpr, Attribute.DELAY, new BoolTerm(false))
+			var reaction = ExprToTermConverter.convertOrDefault(req.reacExpr, Attribute.REACTION, new BoolTerm(true))
+			var release = ExprToTermConverter.convertOrDefault(req.relExpr, Attribute.RELEASE, new BoolTerm(false))
 			
 			val x0 = con(trigger, no(release))
 			val x1 = con(invariant, reaction)
@@ -127,14 +130,14 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			System.out.println(out)
 			
 			val csvRow = newArrayList(reqNum.toString(), req.name, 
-				convertTermToString(trigger, false),
-				convertTermToString(invariant, false),
-				convertTermToString(fin, false),
-				convertTermToString(delay, false),
-				convertTermToString(reaction, false),
-				convertTermToString(release, false),
-				convertTermToString(ltl_formula, false),
-				convertTermToString(ltl_formula, true)
+				TermToStringConverter.convert(trigger, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(invariant, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(fin, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(delay, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(reaction, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(release, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(ltl_formula, globalTimeInterval, TimeRepresentation.PASSED),
+				TermToStringConverter.convert(ltl_formula, globalTimeInterval, TimeRepresentation.INTERVAL)
 				// + expanded LTL
 			)
 			
@@ -146,98 +149,6 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		
 		var csv = csvStringWriter.toString()
 		fsa.generateFile("ltl_output.csv", csv)
-	}
-	
-	private def Term convertExprToTermOrDefault(Expression expr, Term defaultTerm) {
-		return expr !== null ? convertExprToTerm(expr) : defaultTerm
-	}
-	
-	private def Term convertExprToTerm(Expression expr) {
-		if (expr === null) {
-			throw new NullPointerException("Expression is null")
-		}
-		
-		if (expr instanceof PrimaryExpression) {
-			return convertPrimaryExprToPrimaryTerm(expr)
-		}
-		
-		if (expr instanceof UnExpression) {
-			return convertUnaryExprToUnaryTerm(expr)
-		}
-		
-		if (expr instanceof AndExpression) {
-			return new AndTerm(convertExprToTerm(expr.left), convertExprToTerm(expr.right))
-		}
-		
-		if (expr.orOp !== null) {
-			return new OrTerm(convertExprToTerm(expr.left), convertExprToTerm(expr.right))
-		}
-		
-		throw new IllegalArgumentException("Unsupported expression type")
-	}
-	
-	private def PrimaryTerm convertPrimaryExprToPrimaryTerm(PrimaryExpression expr) {
-		if (expr === null) {
-			throw new NullPointerException("Expression is null")
-		}
-		
-		if ("FALSE".equals(expr.constant)) {
-			return new BoolTerm(false)
-		}
-		
-		if ("TRUE".equals(expr.constant)) {
-			return new BoolTerm(true)
-		}
-		
-		if (expr.tau !== null) {
-			return new TimeTerm(String.valueOf(expr.tau.time.interval))
-		}
-		
-		if (expr.v !== null) {
-			return new VarTerm(expr.v.name)
-		}
-		
-		if (expr.nestExpr !== null) {
-			return new NestTerm(convertExprToTerm(expr.nestExpr))
-		}
-		
-		throw new IllegalArgumentException("Unsupported primary expression type")
-	}
-	
-	private def UnaryTerm convertUnaryExprToUnaryTerm(UnExpression expr) {
-		if (expr === null) {
-			throw new NullPointerException("Expression is null")
-		}
-		
-		if (expr.unOp.equals("NOT") || expr.unOp.equals("!")) {
-			return new NotTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
-		}
-	
-		if (expr.unOp.equals("FE")) {
-			return new FeTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
-		}
-		
-		if (expr.unOp.equals("RE")) {
-			return new ReTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
-		}
-		
-		if (expr.unOp.equals("HIGH")) {
-			return new HighTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
-		}
-		
-		if (expr.unOp.equals("LOW")) {
-			return new LowTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
-		}
-		
-		throw new IllegalArgumentException("Unsupported unary expression type")
-	}
-	
-	private def String substituteTauCalcResult() {
-		return ""
-	}
-	
-	private def String calcTauResult() {
-		
 	}
 	
 	private def String convertTermToString(Term term, Boolean value) {		
@@ -934,6 +845,281 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 }
 /* ======================= END TREE TRAVERSAL ======================= */
 
+
+
+/* ======================= CONVERTERS ======================= */
+
+class ExprToTermConverter {
+	
+	Expression expr
+	Attribute attribute
+	
+	new(Expression expr, Attribute attribute) {
+		this.expr = expr
+		this.attribute = attribute
+	}
+	
+	static def Term convertOrDefault(Expression expr, Attribute attribute, Term defaultTerm) {
+		return expr !== null 
+			? new ExprToTermConverter(expr, attribute).convert() 
+			: defaultTerm
+	}
+	
+	def Term convert() {
+		return convertExprToTerm(expr)
+	}
+	
+	private def Term convertExprToTerm(Expression expr) {
+		if (expr === null) {
+			throw new NullPointerException("Expression is null")
+		}
+		
+		if (expr instanceof PrimaryExpression) {
+			return convertPrimaryExprToPrimaryTerm(expr)
+		}
+		
+		if (expr instanceof UnExpression) {
+			return convertUnaryExprToUnaryTerm(expr)
+		}
+		
+		if (expr instanceof AndExpression) {
+			return new AndTerm(convertExprToTerm(expr.left), convertExprToTerm(expr.right))
+		}
+		
+		if (expr.orOp !== null) {
+			return new OrTerm(convertExprToTerm(expr.left), convertExprToTerm(expr.right))
+		}
+		
+		throw new IllegalArgumentException("Unsupported expression type")
+	}
+	
+	private def PrimaryTerm convertPrimaryExprToPrimaryTerm(PrimaryExpression expr) {
+		if (expr === null) {
+			throw new NullPointerException("Expression is null")
+		}
+		
+		if ("FALSE".equals(expr.constant)) {
+			return new BoolTerm(false)
+		}
+		
+		if ("TRUE".equals(expr.constant)) {
+			return new BoolTerm(true)
+		}
+		
+		if (expr.tau !== null) {
+			return new TimeTerm(String.valueOf(expr.tau.time.interval), attribute)
+		}
+		
+		if (expr.v !== null) {
+			return new VarTerm(expr.v.name)
+		}
+		
+		if (expr.nestExpr !== null) {
+			return new NestTerm(convertExprToTerm(expr.nestExpr))
+		}
+		
+		throw new IllegalArgumentException("Unsupported primary expression type")
+	}
+	
+	private def UnaryTerm convertUnaryExprToUnaryTerm(UnExpression expr) {
+		if (expr === null) {
+			throw new NullPointerException("Expression is null")
+		}
+		
+		if (expr.unOp.equals("NOT") || expr.unOp.equals("!")) {
+			return new NotTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
+		}
+	
+		if (expr.unOp.equals("FE")) {
+			return new FeTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
+		}
+		
+		if (expr.unOp.equals("RE")) {
+			return new ReTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
+		}
+		
+		if (expr.unOp.equals("HIGH")) {
+			return new HighTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
+		}
+		
+		if (expr.unOp.equals("LOW")) {
+			return new LowTerm(convertPrimaryExprToPrimaryTerm(expr.right as PrimaryExpression))
+		}
+		
+		throw new IllegalArgumentException("Unsupported unary expression type")
+	}
+	
+}
+
+class TermToStringConverter {
+	
+	Term term
+	long globalTimeIntervalMillis
+	TimeRepresentation timeRepresentation
+	
+	new (Term term, String globalTimeInterval, TimeRepresentation timeRepresentation) {
+		this.term = term
+		this.globalTimeIntervalMillis = TimeIntervalParser.parseTimeIntervalToMillis(globalTimeInterval)
+		this.timeRepresentation = timeRepresentation
+	}
+	
+	static def convert(Term term, String globalTimeInterval, TimeRepresentation timeRepresentation) {
+		return new TermToStringConverter(term, globalTimeInterval, timeRepresentation).convert()
+	}
+	
+	def String convert() {
+		return convertTermToString(term)
+	}
+	
+
+	private def String convertTermToString(Term term) {		
+		if (term instanceof AndTerm) {
+			return "(" + convertTermToString(term.left) + " ∧ " + convertTermToString(term.right) + ")"
+		}
+		
+		if (term instanceof OrTerm) {
+			return "(" + convertTermToString(term.left) + " ∨ " + convertTermToString(term.right) + ")"
+		}
+		
+		if (term instanceof ImplTerm) {
+			return "(" + convertTermToString(term.left) + " → " + convertTermToString(term.right) + ")"
+		}
+		
+		if (term instanceof WTerm) {
+			return "W(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof FTerm) {
+			return "F(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof GTerm) {
+			return "G(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof UTerm) {
+			return "(" + convertTermToString(term.left) + " U " + convertTermToString(term.right) + ")"
+		}
+		
+		if (term instanceof BoolTerm) {
+			return String.valueOf(term.value)
+		}
+		
+		if (term instanceof VarTerm) {
+			return term.name
+		}
+		
+		if (term instanceof TimeTerm) {
+			return switch (timeRepresentation) {
+				case PASSED: "passed(" + String.valueOf(term.interval) + ")"
+				case INTERVAL: buildTimeIntervalString(term.interval, term.attribute)
+				default: throw new IllegalArgumentException("Unsupported time representation type")
+			}
+		}
+		
+		if (term instanceof NestTerm) {
+			return "(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof NotTerm) {
+			return "¬" + convertTermToString(term.term)
+		}
+		
+		if (term instanceof FeTerm) {
+			return "FE(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof ReTerm) {
+			return "RE(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof HighTerm) {
+			return "HIGH(" + convertTermToString(term.term) + ")"
+		}
+		
+		if (term instanceof LowTerm) {
+			return "LOW(" + convertTermToString(term.term) + ")"
+		}
+
+		throw new IllegalArgumentException("Unsupported term type")
+	}
+	
+	private def String buildTimeIntervalString(String timeInterval, Attribute attribute) {
+		var timeIntervalMillis = TimeIntervalParser.parseTimeIntervalToMillis(timeInterval)
+		var cyclesNumber = Math.ceil(timeIntervalMillis as double / globalTimeIntervalMillis) as long
+		
+		var timeSymbol = switch (attribute) {
+			case TRIGGER: "Tprog"
+			case INVARIANT: "Ttrig"
+			case FINAL: "Ttrig"
+			case DELAY: "Tfin"
+			case REACTION: "Tfin"
+			case RELEASE: "Ttrig"
+			default: throw new IllegalArgumentException("Unsupported attribute type")
+		}
+		
+		return "(" + timeSymbol + " >= " + cyclesNumber +")"
+	}
+
+}
+
+class TimeIntervalParser {
+	
+	// format: 1d2h3m4s5ms
+	static Pattern timeIntervalPattern = Pattern.compile("^(\\d+d)?(\\d+h)?(\\d+m)?(\\d+s)?(\\d+ms)?$")
+	static Map<String, Long> timeUnitToMillis = Map.of(
+			"d", Duration.ofDays(1).toMillis(),
+			"h", Duration.ofHours(1).toMillis(),
+			"m", Duration.ofMinutes(1).toMillis(),
+			"s", Duration.ofSeconds(1).toMillis(),
+			"ms", Duration.ofMillis(1).toMillis() 
+		)
+	
+	def static long parseTimeIntervalToMillis(String timeInterval) {
+		var matcher = timeIntervalPattern.matcher(timeInterval.trim())
+		if (!matcher.matches()) {
+			throw new IllegalArgumentException("Time interval has unexpected format")
+		}
+		
+		var long timeIntervalMillis = 0
+		for (var groupIndex = 1; groupIndex <= matcher.groupCount(); groupIndex++) {
+			var String timeIntervalPart = matcher.group(groupIndex);
+			if (timeIntervalPart !== null) {
+				var long timeIntervalPartMillis = parseTimeIntervalPartToMillis(timeIntervalPart)
+				timeIntervalMillis += timeIntervalPartMillis
+			}
+		}
+		
+		return timeIntervalMillis
+	}
+	
+	private def static long parseTimeIntervalPartToMillis(String timeIntervalPart) {
+		var long amount = Long.valueOf(timeIntervalPart.replaceAll("\\D+", ""));
+		var String timeUnit = timeIntervalPart.replaceAll("\\d+", "")
+		return amount * timeUnitToMillis.get(timeUnit)
+	}
+	
+}
+
+
+/* ======================= END CONVERTERS ======================= */
+
+
+
+enum Attribute {
+	TRIGGER,
+	INVARIANT,
+	FINAL,
+	DELAY,
+	REACTION,
+	RELEASE
+}
+
+enum TimeRepresentation {
+	PASSED,
+	INTERVAL
+}
+
 interface Term {
 	
 	def Term copy()
@@ -1230,14 +1416,17 @@ class VarTerm implements PrimaryTerm {
 }
 
 class TimeTerm implements PrimaryTerm {
-	public String interval
+	public String interval;
+	public Attribute attribute;
 	
-	new (String interval) {
+	new (String interval, Attribute attribute) {
 		this.interval = interval
+		this.attribute = attribute
 	}
 	
 	new (TimeTerm term) {
 		this.interval = term.interval
+		this.attribute = term.attribute
 	}
 	
 	override TimeTerm copy() {
@@ -1251,6 +1440,7 @@ class TimeTerm implements PrimaryTerm {
 	    var that = o as TimeTerm
 	    
 	    return Objects.equals(interval, that.interval)
+	    	&& Objects.equals(attribute, that.attribute)
 	}
 	
 	override hashCode() {

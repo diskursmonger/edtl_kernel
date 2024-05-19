@@ -3,9 +3,6 @@
  */
 package su.nsk.iae.edtl.generator;
 
-/**
- * ======================= END TREE TRAVERSAL =======================
- */
 @SuppressWarnings("all")
 public interface Term {
   Term copy();

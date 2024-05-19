@@ -27,6 +27,9 @@ import su.nsk.iae.edtl.edtl.Requirement
 import su.nsk.iae.edtl.edtl.Macros
 import su.nsk.iae.edtl.edtl.PrimaryExpression
 import su.nsk.iae.edtl.edtl.VarAssign
+import su.nsk.iae.edtl.edtl.GlobInterval
+import java.util.Arrays
+import java.util.regex.PatternSyntaxException
 
 class EdtlValidator extends AbstractEdtlValidator {
 	
@@ -105,6 +108,27 @@ class EdtlValidator extends AbstractEdtlValidator {
 	}
 	
 /* ======================= END REPETITION CHECKS ======================= */
+
+/* ======================= START INTERVAL CHECKS ======================= */
+
+	@Check
+	def checkGlobInterval_IsZero(GlobInterval interval){
+        var timeInterval = interval.globInterval.interval.trim()
+        try {
+        	var String[] timeValues = timeInterval.split("\\D+")
+        	var long sum = Arrays.stream(timeValues)
+                .mapToLong([String timeValue | Long.valueOf(timeValue)])
+                .sum()
+        	if (sum == 0) {
+            	error("Division by zero", ePackage.globInterval_GlobInterval)
+				return
+        	}
+        } catch (PatternSyntaxException e) {
+        	error("Invalid time", ePackage.globInterval_GlobInterval)
+        }
+	}
+
+/* ======================= END INTERVAL CHECKS ======================= */
 
 /* ======================= START NAME CONFLICT CHECKS ======================= */
 	

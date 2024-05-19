@@ -9,12 +9,16 @@ import com.google.common.base.Objects;
 public class TimeTerm implements PrimaryTerm {
   public String interval;
 
-  public TimeTerm(final String interval) {
+  public Attribute attribute;
+
+  public TimeTerm(final String interval, final Attribute attribute) {
     this.interval = interval;
+    this.attribute = attribute;
   }
 
   public TimeTerm(final TimeTerm term) {
     this.interval = term.interval;
+    this.attribute = term.attribute;
   }
 
   @Override
@@ -31,7 +35,7 @@ public class TimeTerm implements PrimaryTerm {
       return false;
     }
     TimeTerm that = ((TimeTerm) o);
-    return java.util.Objects.equals(this.interval, that.interval);
+    return (java.util.Objects.equals(this.interval, that.interval) && java.util.Objects.equals(this.attribute, that.attribute));
   }
 
   @Override

@@ -4,14 +4,18 @@
 package su.nsk.iae.edtl.validation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.validation.Check;
+import org.eclipse.xtext.xbase.lib.Exceptions;
 import su.nsk.iae.edtl.edtl.Abbr;
 import su.nsk.iae.edtl.edtl.AndExpression;
 import su.nsk.iae.edtl.edtl.CrossVarAbbr;
@@ -124,6 +128,31 @@ public class EdtlValidator extends AbstractEdtlValidator {
         x.getName().equals(ele.getName()));
     };
     return macroses.stream().anyMatch(_function);
+  }
+
+  /**
+   * ======================= START INTERVAL CHECKS =======================
+   */
+  @Check
+  public void checkGlobInterval_IsZero(final GlobInterval interval) {
+    String timeInterval = interval.getGlobInterval().getInterval().trim();
+    try {
+      String[] timeValues = timeInterval.split("\\D+");
+      final ToLongFunction<String> _function = (String timeValue) -> {
+        return (Long.valueOf(timeValue)).longValue();
+      };
+      long sum = Arrays.<String>stream(timeValues).mapToLong(_function).sum();
+      if ((sum == 0)) {
+        this.error("Division by zero", this.ePackage.getGlobInterval_GlobInterval());
+        return;
+      }
+    } catch (final Throwable _t) {
+      if (_t instanceof PatternSyntaxException) {
+        this.error("Invalid time", this.ePackage.getGlobInterval_GlobInterval());
+      } else {
+        throw Exceptions.sneakyThrow(_t);
+      }
+    }
   }
 
   /**

@@ -1,0 +1,12 @@
+#
+#Tue May 14 19:25:47 NOVT 2024
+buildDir=build
+buildScriptPath=build.gradle
+classpath=<?xml version\="1.0" encoding\="UTF-8"?>\n<classpath>\n</classpath>\n
+derivedResources=.gradle\:build\:su.nsk.iae.edtl/build\:su.nsk.iae.edtl.ide/build\:su.nsk.iae.edtl.tests/build
+gradleVersion=8.6
+hasAutoBuildTasks=false
+linkedResources=
+managedBuilders=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?><commands/>
+managedNatures=org.eclipse.jdt.core.javanature
+subprojectPaths=su.nsk.iae.edtl\:su.nsk.iae.edtl.ide\:su.nsk.iae.edtl.tests
