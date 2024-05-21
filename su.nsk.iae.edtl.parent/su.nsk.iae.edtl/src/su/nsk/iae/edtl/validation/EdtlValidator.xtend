@@ -43,7 +43,7 @@ class EdtlValidator extends AbstractEdtlValidator {
 		if (model.declVarInput.checkVarRepetition_DeclVarInput(ele) ||
 			model.declVarOutput.checkVarRepetition_DeclVarOutput(ele)
 		){
-			error("Variable name is duplicate", ePackage.crossVarAbbr_Name)
+			error("Variable name is duplicated", ePackage.crossVarAbbr_Name)
 			return
 		}
 	}
@@ -66,7 +66,7 @@ class EdtlValidator extends AbstractEdtlValidator {
 	def checkRequirement_RequirementRepetition(Requirement ele){
 		val model = ele.getContainerOfType(Model)
 		if (model.reqs.checkRequirementRepetition(ele)){
-			error("Requirement name is duplicate", ePackage.requirement_Name)
+			error("Requirement name is duplicated", ePackage.requirement_Name)
 			return
 		}
 	}
@@ -81,7 +81,7 @@ class EdtlValidator extends AbstractEdtlValidator {
 	def checkAbbr_AbbrRepetition(Abbr ele){
 		val model = ele.getContainerOfType(Model)
 		if (model.abbrs.checkAbbrRepetition(ele)){
-			error("Abbr name is duplicate", ePackage.crossVarAbbr_Name)
+			error("Abbr name is duplicated", ePackage.crossVarAbbr_Name)
 			return
 		}
 	}
@@ -96,7 +96,7 @@ class EdtlValidator extends AbstractEdtlValidator {
 	def checkMacros_MacrosRepetition(Macros ele){
 		val model = ele.getContainerOfType(Model)
 		if (model.macroses.checkMacrosRepetition(ele)){
-			error("Macros name is duplicate", ePackage.macros_Name)
+			error("Macros name is duplicated", ePackage.macros_Name)
 			return
 		}
 	}

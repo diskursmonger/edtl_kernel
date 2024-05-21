@@ -46,7 +46,7 @@ public class EdtlValidator extends AbstractEdtlValidator {
     final Model model = EcoreUtil2.<Model>getContainerOfType(ele, Model.class);
     if ((this.checkVarRepetition_DeclVarInput(model.getDeclVarInput(), ele) || 
       this.checkVarRepetition_DeclVarOutput(model.getDeclVarOutput(), ele))) {
-      this.error("Variable name is duplicate", this.ePackage.getCrossVarAbbr_Name());
+      this.error("Variable name is duplicated", this.ePackage.getCrossVarAbbr_Name());
       return;
     }
   }
@@ -81,7 +81,7 @@ public class EdtlValidator extends AbstractEdtlValidator {
     final Model model = EcoreUtil2.<Model>getContainerOfType(ele, Model.class);
     boolean _checkRequirementRepetition = this.checkRequirementRepetition(model.getReqs(), ele);
     if (_checkRequirementRepetition) {
-      this.error("Requirement name is duplicate", this.ePackage.getRequirement_Name());
+      this.error("Requirement name is duplicated", this.ePackage.getRequirement_Name());
       return;
     }
   }
@@ -99,7 +99,7 @@ public class EdtlValidator extends AbstractEdtlValidator {
     final Model model = EcoreUtil2.<Model>getContainerOfType(ele, Model.class);
     boolean _checkAbbrRepetition = this.checkAbbrRepetition(model.getAbbrs(), ele);
     if (_checkAbbrRepetition) {
-      this.error("Abbr name is duplicate", this.ePackage.getCrossVarAbbr_Name());
+      this.error("Abbr name is duplicated", this.ePackage.getCrossVarAbbr_Name());
       return;
     }
   }
@@ -117,7 +117,7 @@ public class EdtlValidator extends AbstractEdtlValidator {
     final Model model = EcoreUtil2.<Model>getContainerOfType(ele, Model.class);
     boolean _checkMacrosRepetition = this.checkMacrosRepetition(model.getMacroses(), ele);
     if (_checkMacrosRepetition) {
-      this.error("Macros name is duplicate", this.ePackage.getMacros_Name());
+      this.error("Macros name is duplicated", this.ePackage.getMacros_Name());
       return;
     }
   }

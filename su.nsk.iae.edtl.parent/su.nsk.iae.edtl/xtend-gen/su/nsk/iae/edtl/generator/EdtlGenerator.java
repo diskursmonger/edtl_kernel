@@ -25,6 +25,7 @@ import su.nsk.iae.edtl.edtl.Abbr;
 import su.nsk.iae.edtl.edtl.AndExpression;
 import su.nsk.iae.edtl.edtl.CrossVarAbbr;
 import su.nsk.iae.edtl.edtl.Expression;
+import su.nsk.iae.edtl.edtl.GlobInterval;
 import su.nsk.iae.edtl.edtl.Macros;
 import su.nsk.iae.edtl.edtl.Model;
 import su.nsk.iae.edtl.edtl.ParamAssignmentElements;
@@ -43,6 +44,8 @@ import su.nsk.iae.edtl.edtl.XorExpression;
 @SuppressWarnings("all")
 public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
   private final ArrayList<String> headerCsv = CollectionLiterals.<String>newArrayList(" ", "req name", "trigger", "invariant", "final", "delay", "reaction", "release", "LTL formula", "Substituted LTL formula");
+
+  private final CGenerator cGenerator = new CGenerator();
 
   public static void initGenerators() {
   }
@@ -74,7 +77,14 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       csvWriter.writeNext(((String[])Conversions.unwrapArray(this.headerCsv, String.class)));
       final Model ast = ((Model[])Conversions.unwrapArray((Iterables.<Model>filter(IteratorExtensions.<EObject>toIterable(resource.getAllContents()), Model.class)), Model.class))[0];
       final EList<Requirement> reqs = ast.getReqs();
-      String globalTimeInterval = ast.getGlobInterval().getGlobInterval().getInterval();
+      String globalTimeInterval = null;
+      GlobInterval _globInterval = ast.getGlobInterval();
+      boolean _tripleEquals = (_globInterval == null);
+      if (_tripleEquals) {
+        globalTimeInterval = "";
+      } else {
+        globalTimeInterval = ast.getGlobInterval().getGlobInterval().getInterval();
+      }
       int reqNum = 1;
       for (final Requirement req : reqs) {
         {
@@ -162,6 +172,7 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       csvWriter.close();
       String csv = csvStringWriter.toString();
       fsa.generateFile("ltl_output.csv", csv);
+      this.cGenerator.generateCCode(resource, fsa, context);
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }

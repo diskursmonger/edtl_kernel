@@ -37,23 +37,14 @@ import java.time.temporal.TemporalUnit
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
-
-//	static final String EXTENSION_ID = "su.nsk.iae.edtl.edtl_extension"
-//	static final List<IEdtlGenerator> generators = new ArrayList
 	
 	val headerCsv = newArrayList(" ", "req name", "trigger", "invariant", "final", "delay", "reaction", "release", "LTL formula", "Substituted LTL formula")
 	
-	// + expanded LTL
+	val cGenerator = new CGenerator
 	
 	// Init expansion modules
 	static def void initGenerators() {
-//		val configuration = Platform.extensionRegistry.getConfigurationElementsFor(EXTENSION_ID)
-//		for (el : configuration) {
-//			val obj = el.createExecutableExtension("class")
-//			if (obj instanceof IEdtlGenerator) {
-//				generators.add(obj)
-//			}
-//		}
+
 	}
 
 	//	Substitute abbreviations and macroses
@@ -68,7 +59,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		])
 	}
 	
-		// Get model and set model with abbrs and macroses
+	// Get model and set model with abbrs and macroses
 	override void beforeGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		val model = resource.allContents.
 							toIterable.
@@ -79,7 +70,6 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 	
 	// Call expansion modules
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('''«""»ltl_result.csv''', generateLtl())
 		
 		var csvStringWriter = new StringWriter()
 		var csvWriter = new CSVWriter(csvStringWriter)
@@ -93,7 +83,13 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 					get(0)
 		val reqs = ast.reqs
 		
-		var globalTimeInterval = ast.globInterval.globInterval.interval // format: 1h1m1s1ms
+		var String globalTimeInterval
+		
+		if (ast.globInterval === null) {
+			globalTimeInterval = ""
+		} else {
+			globalTimeInterval = ast.globInterval.globInterval.interval // format: 1h1m1s1ms
+		}
 	
 		var reqNum = 1
 		
@@ -149,7 +145,13 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		
 		var csv = csvStringWriter.toString()
 		fsa.generateFile("ltl_output.csv", csv)
+		
+		cGenerator.generateCCode(resource, fsa, context)
 	}
+	
+	
+	
+	////////////////////////////////LTL GENERATOR////////////////////////////////
 	
 	private def String convertTermToString(Term term, Boolean value) {		
 		if (term instanceof AndTerm) {
