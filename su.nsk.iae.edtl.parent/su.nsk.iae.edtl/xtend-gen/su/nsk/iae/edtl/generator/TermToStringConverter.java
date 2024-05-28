@@ -50,28 +50,23 @@ public class TermToStringConverter {
       String _plus_8 = (_plus_7 + _convertTermToString_5);
       return (_plus_8 + ")");
     }
-    if ((term instanceof WTerm)) {
-      String _convertTermToString_6 = this.convertTermToString(((WTerm)term).term);
-      String _plus_9 = ("W(" + _convertTermToString_6);
+    if ((term instanceof FTerm)) {
+      String _convertTermToString_6 = this.convertTermToString(((FTerm)term).term);
+      String _plus_9 = ("F(" + _convertTermToString_6);
       return (_plus_9 + ")");
     }
-    if ((term instanceof FTerm)) {
-      String _convertTermToString_7 = this.convertTermToString(((FTerm)term).term);
-      String _plus_10 = ("F(" + _convertTermToString_7);
+    if ((term instanceof GTerm)) {
+      String _convertTermToString_7 = this.convertTermToString(((GTerm)term).term);
+      String _plus_10 = ("G(" + _convertTermToString_7);
       return (_plus_10 + ")");
     }
-    if ((term instanceof GTerm)) {
-      String _convertTermToString_8 = this.convertTermToString(((GTerm)term).term);
-      String _plus_11 = ("G(" + _convertTermToString_8);
-      return (_plus_11 + ")");
-    }
-    if ((term instanceof UTerm)) {
-      String _convertTermToString_9 = this.convertTermToString(((UTerm)term).left);
-      String _plus_12 = ("(" + _convertTermToString_9);
-      String _plus_13 = (_plus_12 + " U ");
-      String _convertTermToString_10 = this.convertTermToString(((UTerm)term).right);
-      String _plus_14 = (_plus_13 + _convertTermToString_10);
-      return (_plus_14 + ")");
+    if ((term instanceof WTerm)) {
+      String _convertTermToString_8 = this.convertTermToString(((WTerm)term).left);
+      String _plus_11 = ("(" + _convertTermToString_8);
+      String _plus_12 = (_plus_11 + " W ");
+      String _convertTermToString_9 = this.convertTermToString(((WTerm)term).right);
+      String _plus_13 = (_plus_12 + _convertTermToString_9);
+      return (_plus_13 + ")");
     }
     if ((term instanceof BoolTerm)) {
       return String.valueOf(((BoolTerm)term).value);
@@ -86,8 +81,8 @@ public class TermToStringConverter {
         switch (timeRepresentation) {
           case PASSED:
             String _valueOf = String.valueOf(((TimeTerm)term).interval);
-            String _plus_15 = ("passed(" + _valueOf);
-            _switchResult = (_plus_15 + ")");
+            String _plus_14 = ("passed(" + _valueOf);
+            _switchResult = (_plus_14 + ")");
             break;
           case INTERVAL:
             _switchResult = this.buildTimeIntervalString(((TimeTerm)term).interval, ((TimeTerm)term).attribute);
@@ -101,33 +96,33 @@ public class TermToStringConverter {
       return _switchResult;
     }
     if ((term instanceof NestTerm)) {
-      String _convertTermToString_11 = this.convertTermToString(((NestTerm)term).term);
-      String _plus_16 = ("(" + _convertTermToString_11);
-      return (_plus_16 + ")");
+      String _convertTermToString_10 = this.convertTermToString(((NestTerm)term).term);
+      String _plus_15 = ("(" + _convertTermToString_10);
+      return (_plus_15 + ")");
     }
     if ((term instanceof NotTerm)) {
-      String _convertTermToString_12 = this.convertTermToString(((NotTerm)term).term);
-      return ("¬" + _convertTermToString_12);
+      String _convertTermToString_11 = this.convertTermToString(((NotTerm)term).term);
+      return ("¬" + _convertTermToString_11);
     }
     if ((term instanceof FeTerm)) {
-      String _convertTermToString_13 = this.convertTermToString(((FeTerm)term).term);
-      String _plus_17 = ("FE(" + _convertTermToString_13);
-      return (_plus_17 + ")");
+      String _convertTermToString_12 = this.convertTermToString(((FeTerm)term).term);
+      String _plus_16 = ("FE(" + _convertTermToString_12);
+      return (_plus_16 + ")");
     }
     if ((term instanceof ReTerm)) {
-      String _convertTermToString_14 = this.convertTermToString(((ReTerm)term).term);
-      String _plus_18 = ("RE(" + _convertTermToString_14);
-      return (_plus_18 + ")");
+      String _convertTermToString_13 = this.convertTermToString(((ReTerm)term).term);
+      String _plus_17 = ("RE(" + _convertTermToString_13);
+      return (_plus_17 + ")");
     }
     if ((term instanceof HighTerm)) {
-      String _convertTermToString_15 = this.convertTermToString(((HighTerm)term).term);
-      String _plus_19 = ("HIGH(" + _convertTermToString_15);
-      return (_plus_19 + ")");
+      String _convertTermToString_14 = this.convertTermToString(((HighTerm)term).term);
+      String _plus_18 = ("HIGH(" + _convertTermToString_14);
+      return (_plus_18 + ")");
     }
     if ((term instanceof LowTerm)) {
-      String _convertTermToString_16 = this.convertTermToString(((LowTerm)term).term);
-      String _plus_20 = ("LOW(" + _convertTermToString_16);
-      return (_plus_20 + ")");
+      String _convertTermToString_15 = this.convertTermToString(((LowTerm)term).term);
+      String _plus_19 = ("LOW(" + _convertTermToString_15);
+      return (_plus_19 + ")");
     }
     throw new IllegalArgumentException("Unsupported term type");
   }

@@ -110,11 +110,11 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
           final Term x1 = this.con(invariant, reaction);
           final Term x2 = this.dis(release, x1);
           final Term x3 = this.con(invariant, this.no(delay));
-          final Term x4 = this.until(x3, x2);
+          final Term x4 = this.wuntil(x3, x2);
           final Term x5 = this.con(fin, x4);
           final Term x6 = this.dis(release, x5);
           final Term x7 = this.con(invariant, this.no(fin));
-          final Term x8 = this.until(x7, x6);
+          final Term x8 = this.wuntil(x7, x6);
           final Term x9 = this.impl(x0, x8);
           final Term ltl_formula = this.globally(x9);
           String _name = req.getName();
@@ -203,28 +203,23 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       String _plus_8 = (_plus_7 + _convertTermToString_5);
       return (_plus_8 + ")");
     }
-    if ((term instanceof WTerm)) {
-      String _convertTermToString_6 = this.convertTermToString(((WTerm)term).term, value);
-      String _plus_9 = ("W(" + _convertTermToString_6);
+    if ((term instanceof FTerm)) {
+      String _convertTermToString_6 = this.convertTermToString(((FTerm)term).term, value);
+      String _plus_9 = ("F(" + _convertTermToString_6);
       return (_plus_9 + ")");
     }
-    if ((term instanceof FTerm)) {
-      String _convertTermToString_7 = this.convertTermToString(((FTerm)term).term, value);
-      String _plus_10 = ("F(" + _convertTermToString_7);
+    if ((term instanceof GTerm)) {
+      String _convertTermToString_7 = this.convertTermToString(((GTerm)term).term, value);
+      String _plus_10 = ("G(" + _convertTermToString_7);
       return (_plus_10 + ")");
     }
-    if ((term instanceof GTerm)) {
-      String _convertTermToString_8 = this.convertTermToString(((GTerm)term).term, value);
-      String _plus_11 = ("G(" + _convertTermToString_8);
-      return (_plus_11 + ")");
-    }
-    if ((term instanceof UTerm)) {
-      String _convertTermToString_9 = this.convertTermToString(((UTerm)term).left, value);
-      String _plus_12 = ("(" + _convertTermToString_9);
-      String _plus_13 = (_plus_12 + " U ");
-      String _convertTermToString_10 = this.convertTermToString(((UTerm)term).right, value);
-      String _plus_14 = (_plus_13 + _convertTermToString_10);
-      return (_plus_14 + ")");
+    if ((term instanceof WTerm)) {
+      String _convertTermToString_8 = this.convertTermToString(((WTerm)term).left, value);
+      String _plus_11 = ("(" + _convertTermToString_8);
+      String _plus_12 = (_plus_11 + " W ");
+      String _convertTermToString_9 = this.convertTermToString(((WTerm)term).right, value);
+      String _plus_13 = (_plus_12 + _convertTermToString_9);
+      return (_plus_13 + ")");
     }
     if ((term instanceof BoolTerm)) {
       return String.valueOf(((BoolTerm)term).value);
@@ -235,42 +230,42 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
     if ((term instanceof TimeTerm)) {
       if (((value).booleanValue() == false)) {
         String _valueOf = String.valueOf(((TimeTerm)term).interval);
-        String _plus_15 = ("passed(" + _valueOf);
-        return (_plus_15 + ")");
+        String _plus_14 = ("passed(" + _valueOf);
+        return (_plus_14 + ")");
       } else {
         String _valueOf_1 = String.valueOf(((TimeTerm)term).interval);
-        String _plus_16 = ("passed(" + _valueOf_1);
-        return (_plus_16 + ")");
+        String _plus_15 = ("passed(" + _valueOf_1);
+        return (_plus_15 + ")");
       }
     }
     if ((term instanceof NestTerm)) {
-      String _convertTermToString_11 = this.convertTermToString(((NestTerm)term).term, value);
-      String _plus_17 = ("(" + _convertTermToString_11);
-      return (_plus_17 + ")");
+      String _convertTermToString_10 = this.convertTermToString(((NestTerm)term).term, value);
+      String _plus_16 = ("(" + _convertTermToString_10);
+      return (_plus_16 + ")");
     }
     if ((term instanceof NotTerm)) {
-      String _convertTermToString_12 = this.convertTermToString(((NotTerm)term).term, value);
-      return ("¬" + _convertTermToString_12);
+      String _convertTermToString_11 = this.convertTermToString(((NotTerm)term).term, value);
+      return ("¬" + _convertTermToString_11);
     }
     if ((term instanceof FeTerm)) {
-      String _convertTermToString_13 = this.convertTermToString(((FeTerm)term).term, value);
-      String _plus_18 = ("FE(" + _convertTermToString_13);
-      return (_plus_18 + ")");
+      String _convertTermToString_12 = this.convertTermToString(((FeTerm)term).term, value);
+      String _plus_17 = ("FE(" + _convertTermToString_12);
+      return (_plus_17 + ")");
     }
     if ((term instanceof ReTerm)) {
-      String _convertTermToString_14 = this.convertTermToString(((ReTerm)term).term, value);
-      String _plus_19 = ("RE(" + _convertTermToString_14);
-      return (_plus_19 + ")");
+      String _convertTermToString_13 = this.convertTermToString(((ReTerm)term).term, value);
+      String _plus_18 = ("RE(" + _convertTermToString_13);
+      return (_plus_18 + ")");
     }
     if ((term instanceof HighTerm)) {
-      String _convertTermToString_15 = this.convertTermToString(((HighTerm)term).term, value);
-      String _plus_20 = ("HIGH(" + _convertTermToString_15);
-      return (_plus_20 + ")");
+      String _convertTermToString_14 = this.convertTermToString(((HighTerm)term).term, value);
+      String _plus_19 = ("HIGH(" + _convertTermToString_14);
+      return (_plus_19 + ")");
     }
     if ((term instanceof LowTerm)) {
-      String _convertTermToString_16 = this.convertTermToString(((LowTerm)term).term, value);
-      String _plus_21 = ("LOW(" + _convertTermToString_16);
-      return (_plus_21 + ")");
+      String _convertTermToString_15 = this.convertTermToString(((LowTerm)term).term, value);
+      String _plus_20 = ("LOW(" + _convertTermToString_15);
+      return (_plus_20 + ")");
     }
     throw new IllegalArgumentException("Unsupported term type");
   }
@@ -427,8 +422,8 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
         }
       }
     }
-    if ((right instanceof UTerm)) {
-      Term right_r_1 = ((UTerm)right).right;
+    if ((right instanceof WTerm)) {
+      Term right_r_1 = ((WTerm)right).right;
       boolean _equals_3 = right_r_1.equals(left);
       if (_equals_3) {
         return right;
@@ -470,8 +465,8 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
         }
       }
     }
-    if ((right instanceof UTerm)) {
-      Term right_r_2 = ((UTerm)right).right;
+    if ((right instanceof WTerm)) {
+      Term right_r_2 = ((WTerm)right).right;
       if ((right_r_2 instanceof OrTerm)) {
         boolean _equals_7 = ((OrTerm)right_r_2).left.equals(left);
         if (_equals_7) {
@@ -482,7 +477,7 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
     return new OrTerm(left, right);
   }
 
-  private Term until(final Term l, final Term r) {
+  private Term wuntil(final Term l, final Term r) {
     Term left = l.copy();
     Term right = r.copy();
     if ((right instanceof BoolTerm)) {
@@ -509,7 +504,7 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       if ((right instanceof OrTerm)) {
         boolean _equals_2 = ((NotTerm)left).term.equals(((OrTerm)right).right);
         if (_equals_2) {
-          return this.dis(this.future(((NotTerm)left).term), this.until(left, ((OrTerm)right).left));
+          return this.dis(this.future(((NotTerm)left).term), this.wuntil(left, ((OrTerm)right).left));
         }
       }
     }
@@ -517,7 +512,7 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       if ((right instanceof OrTerm)) {
         boolean _equals_3 = ((AndTerm)left).left.equals(((OrTerm)right).right);
         if (_equals_3) {
-          return this.dis(((AndTerm)left).left, this.until(left, ((OrTerm)right).left));
+          return this.dis(((AndTerm)left).left, this.wuntil(left, ((OrTerm)right).left));
         }
       }
     }
@@ -530,7 +525,7 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
     if ((right instanceof OrTerm)) {
       boolean _equals_5 = left.equals(((OrTerm)right).right);
       if (_equals_5) {
-        return this.dis(left, this.until(left, ((OrTerm)right).left));
+        return this.dis(left, this.wuntil(left, ((OrTerm)right).left));
       }
     }
     if ((left instanceof AndTerm)) {
@@ -541,13 +536,13 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
           if ((left_r instanceof NotTerm)) {
             boolean _equals_7 = ((NotTerm)left_r).term.equals(((AndTerm)right).left);
             if (_equals_7) {
-              return this.until(((AndTerm)left).left, right);
+              return this.wuntil(((AndTerm)left).left, right);
             }
           }
         }
       }
     }
-    return new UTerm(left, right);
+    return new WTerm(left, right);
   }
 
   private Term impl(final Term l, final Term r) {
@@ -591,14 +586,14 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       Term t_left = ((OrTerm)t).left;
       if ((t_left instanceof GTerm)) {
         Term t_right = ((OrTerm)t).right;
-        if ((t_right instanceof UTerm)) {
-          Term t_right_right = ((UTerm)t_right).right;
+        if ((t_right instanceof WTerm)) {
+          Term t_right_right = ((WTerm)t_right).right;
           if ((t_right_right instanceof AndTerm)) {
             Term t_left_term = ((GTerm)t_left).term;
             if ((t_left_term instanceof AndTerm)) {
-              boolean _equals = ((AndTerm)t_left_term).left.equals(((UTerm)t_right).left);
+              boolean _equals = ((AndTerm)t_left_term).left.equals(((WTerm)t_right).left);
               if (_equals) {
-                boolean _equals_1 = ((UTerm)t_right).left.equals(((AndTerm)t_right_right).right);
+                boolean _equals_1 = ((WTerm)t_right).left.equals(((AndTerm)t_right_right).right);
                 if (_equals_1) {
                   Term t_left_term_right = ((AndTerm)t_left_term).right;
                   if ((t_left_term_right instanceof NotTerm)) {
@@ -618,18 +613,18 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       Term t_left_1 = ((OrTerm)t).left;
       if ((t_left_1 instanceof GTerm)) {
         Term t_right_1 = ((OrTerm)t).right;
-        if ((t_right_1 instanceof UTerm)) {
-          boolean _equals_3 = ((GTerm)t_left_1).term.equals(((UTerm)t_right_1).left);
+        if ((t_right_1 instanceof WTerm)) {
+          boolean _equals_3 = ((GTerm)t_left_1).term.equals(((WTerm)t_right_1).left);
           if (_equals_3) {
-            Term t_right_right_1 = ((UTerm)t_right_1).right;
+            Term t_right_right_1 = ((WTerm)t_right_1).right;
             if ((t_right_right_1 instanceof AndTerm)) {
               Term t_right_right_right = ((AndTerm)t_right_right_1).right;
-              if ((t_right_right_right instanceof UTerm)) {
-                Term t_right_right_right_right = ((UTerm)t_right_right_right).right;
+              if ((t_right_right_right instanceof WTerm)) {
+                Term t_right_right_right_right = ((WTerm)t_right_right_right).right;
                 if ((t_right_right_right_right instanceof AndTerm)) {
-                  Term t_right_left = ((UTerm)t_right_1).left;
+                  Term t_right_left = ((WTerm)t_right_1).left;
                   if ((t_right_left instanceof AndTerm)) {
-                    boolean _equals_4 = ((AndTerm)t_right_left).left.equals(((UTerm)t_right_right_right).left);
+                    boolean _equals_4 = ((AndTerm)t_right_left).left.equals(((WTerm)t_right_right_right).left);
                     if (_equals_4) {
                       boolean _equals_5 = ((AndTerm)t_right_left).left.equals(((AndTerm)t_right_right_right_right).left);
                       if (_equals_5) {
@@ -660,16 +655,16 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
     }
     if ((t instanceof OrTerm)) {
       Term t_right_2 = ((OrTerm)t).right;
-      if ((t_right_2 instanceof UTerm)) {
+      if ((t_right_2 instanceof WTerm)) {
         Term t_left_2 = ((OrTerm)t).left;
         if ((t_left_2 instanceof GTerm)) {
           Term t_left_term_1 = ((GTerm)t_left_2).term;
           if ((t_left_term_1 instanceof AndTerm)) {
-            Term t_right_left_1 = ((UTerm)t_right_2).left;
+            Term t_right_left_1 = ((WTerm)t_right_2).left;
             if ((t_right_left_1 instanceof AndTerm)) {
               boolean _equals_7 = ((AndTerm)t_left_term_1).equals(t_right_left_1);
               if (_equals_7) {
-                Term t_right_right_2 = ((UTerm)t_right_2).right;
+                Term t_right_right_2 = ((WTerm)t_right_2).right;
                 if ((t_right_right_2 instanceof AndTerm)) {
                   Term t_right_right_right_1 = ((AndTerm)t_right_right_2).right;
                   if ((t_right_right_right_1 instanceof AndTerm)) {
@@ -700,10 +695,10 @@ public class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
       Term t_left_3 = ((OrTerm)t).left;
       if ((t_left_3 instanceof GTerm)) {
         Term t_right_3 = ((OrTerm)t).right;
-        if ((t_right_3 instanceof UTerm)) {
-          boolean _equals_10 = ((GTerm)t_left_3).term.equals(((UTerm)t_right_3).left);
+        if ((t_right_3 instanceof WTerm)) {
+          boolean _equals_10 = ((GTerm)t_left_3).term.equals(((WTerm)t_right_3).left);
           if (_equals_10) {
-            return this.globally(this.con(((GTerm)t_left_3).term, this.future(((UTerm)t_right_3).right)));
+            return this.globally(this.con(((GTerm)t_left_3).term, this.future(((WTerm)t_right_3).right)));
           }
         }
       }

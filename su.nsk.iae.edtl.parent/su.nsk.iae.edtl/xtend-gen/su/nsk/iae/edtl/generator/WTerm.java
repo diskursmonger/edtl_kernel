@@ -7,20 +7,30 @@ import com.google.common.base.Objects;
 
 @SuppressWarnings("all")
 public class WTerm implements Term {
-  public Term term;
+  public Term left;
 
-  public WTerm(final Term term) {
-    this.term = term;
+  public Term right;
+
+  public WTerm(final Term l, final Term r) {
+    this.left = l;
+    this.right = r;
   }
 
-  public WTerm(final WTerm wTerm) {
+  public WTerm(final WTerm term) {
     Term _xifexpression = null;
-    if ((wTerm.term != null)) {
-      _xifexpression = wTerm.term.copy();
+    if ((term.left != null)) {
+      _xifexpression = term.left.copy();
     } else {
       _xifexpression = null;
     }
-    this.term = _xifexpression;
+    this.left = _xifexpression;
+    Term _xifexpression_1 = null;
+    if ((term.right != null)) {
+      _xifexpression_1 = term.right.copy();
+    } else {
+      _xifexpression_1 = null;
+    }
+    this.right = _xifexpression_1;
   }
 
   @Override
@@ -36,8 +46,8 @@ public class WTerm implements Term {
     if (((o == null) || (!Objects.equal(this.getClass(), o.getClass())))) {
       return false;
     }
-    WTerm that = ((WTerm) o);
-    return java.util.Objects.equals(this.term, that.term);
+    UTerm that = ((UTerm) o);
+    return (java.util.Objects.equals(this.left, that.left) && java.util.Objects.equals(this.right, that.right));
   }
 
   @Override

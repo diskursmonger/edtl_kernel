@@ -105,11 +105,11 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			val x1 = con(invariant, reaction)
 			val x2 = dis(release, x1)
 			val x3 = con(invariant, no(delay))
-			val x4 = until(x3, x2)
+			val x4 = wuntil(x3, x2)
 			val x5 = con(fin, x4)
 			val x6 = dis(release, x5)
 			val x7 = con(invariant, no(fin))
-			val x8 = until(x7, x6)
+			val x8 = wuntil(x7, x6)
 			val x9 = impl(x0, x8)
 			val ltl_formula = globally(x9)
 
@@ -166,9 +166,9 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			return "(" + convertTermToString(term.left, value) + " → " + convertTermToString(term.right, value) + ")"
 		}
 		
-		if (term instanceof WTerm) {
-			return "W(" + convertTermToString(term.term, value) + ")"
-		}
+//		if (term instanceof WTerm) {
+//			return "W(" + convertTermToString(term.term, value) + ")"
+//		}
 		
 		if (term instanceof FTerm) {
 			return "F(" + convertTermToString(term.term, value) + ")"
@@ -178,8 +178,8 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			return "G(" + convertTermToString(term.term, value) + ")"
 		}
 		
-		if (term instanceof UTerm) {
-			return "(" + convertTermToString(term.left, value) + " U " + convertTermToString(term.right, value) + ")"
+		if (term instanceof WTerm) {
+			return "(" + convertTermToString(term.left, value) + " W " + convertTermToString(term.right, value) + ")"
 		}
 		
 		if (term instanceof BoolTerm) {
@@ -357,7 +357,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		}
 		
 		// a ∨ (b U a) = (b U a)
-		if (right instanceof UTerm) {
+		if (right instanceof WTerm) {
 			var right_r = right.right
 			if (right_r.equals(left)) {
 				return right
@@ -406,7 +406,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		}
 		
 		// a ∨ (b U (a ∨ c)) = (b U (a ∨ c))
-		if (right instanceof UTerm) {
+		if (right instanceof WTerm) {
 			var right_r = right.right
 			if (right_r instanceof OrTerm) {
 				if (right_r.left.equals(left)) {
@@ -443,7 +443,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 //		return false
 //	}
 	
-	private def Term until(Term l, Term r) {
+	private def Term wuntil(Term l, Term r) {
 		var left = l.copy
 		var right = r.copy
 		
@@ -479,7 +479,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		if (left instanceof NotTerm) {
 			if (right instanceof OrTerm) {
 				if (left.term.equals(right.right)) {
-					return dis(future(left.term), until(left, right.left))
+					return dis(future(left.term), wuntil(left, right.left))
 				}
 			}
 		}
@@ -496,7 +496,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		if (left instanceof AndTerm) {
 			if (right instanceof OrTerm) {
 				if (left.left.equals(right.right)) {
-					return dis(left.left, until(left, right.left))
+					return dis(left.left, wuntil(left, right.left))
 				}
 			}
 		}
@@ -511,7 +511,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		// a U (b ∨ a) = a ∨ (a U b)
 		if (right instanceof OrTerm) {
 			if (left.equals(right.right)) {
-				return dis(left, until(left, right.left))
+				return dis(left, wuntil(left, right.left))
 			}
 		}
 		
@@ -522,7 +522,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 					var left_r = left.right
 					if (left_r instanceof NotTerm) {
 						if (left_r.term.equals(right.left)) {
-							return until(left.left, right)
+							return wuntil(left.left, right)
 						}
 					}
 				}
@@ -539,7 +539,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 //			}
 //		}
 		
-		return new UTerm(left, right)
+		return new WTerm(left, right)
 	}
 	
 	private def Term impl(Term l, Term r) {
@@ -603,7 +603,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			var t_left = t.left // G(a ∧ ¬b)
 			if (t_left instanceof GTerm) {
 				var t_right = t.right // (a U (b ∧ a))
-				if (t_right instanceof UTerm) {
+				if (t_right instanceof WTerm) {
 					var t_right_right = t_right.right // (b ∧ a)
 					if (t_right_right instanceof AndTerm) {
 						var t_left_term = t_left.term // (a ∧ ¬b)
@@ -647,12 +647,12 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			var t_left = t.left // G(a ∧ ¬b)
 			if (t_left instanceof GTerm) {
 				var t_right = t.right // ((a ∧ ¬b) U (b ∧ (a U (a ∧ c))))
-				if (t_right instanceof UTerm) {
+				if (t_right instanceof WTerm) {
 					if (t_left.term.equals(t_right.left)) {
 						var t_right_right = t_right.right // (b ∧ (a U (a ∧ c)))
 						if (t_right_right instanceof AndTerm) {
 							var t_right_right_right = t_right_right.right // (a U (a ∧ c))
-							if (t_right_right_right instanceof UTerm) {
+							if (t_right_right_right instanceof WTerm) {
 								var t_right_right_right_right = t_right_right_right.right // (a ∧ c)
 								if (t_right_right_right_right instanceof AndTerm) {
 									var t_right_left = t_right.left // (a ∧ ¬b)
@@ -688,7 +688,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 		// G(G(a ∧ ¬b) ∨ ((a ∧ ¬b) U (b ∧ (a ∧ c)))) = G(a ∧ (G(¬b) ∨ F(b ∧ c)))
 		if (t instanceof OrTerm) {
 			var t_right = t.right // ((a ∧ ¬b) U (b ∧ (a ∧ c)))
-			if (t_right instanceof UTerm) {
+			if (t_right instanceof WTerm) {
 				var t_left = t.left // G(a ∧ ¬b)
 				if (t_left instanceof GTerm) {
 					var t_left_term = t_left.term // (a ∧ ¬b)
@@ -749,7 +749,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			var t_left = t.left // G(a)
 			if (t_left instanceof GTerm) {
 				var t_right = t.right // (a U b)
-				if (t_right instanceof UTerm) {
+				if (t_right instanceof WTerm) {
 					if (t_left.term.equals(t_right.left)) {
 						return globally(con(t_left.term, future(t_right.right)))
 					}
@@ -987,9 +987,9 @@ class TermToStringConverter {
 			return "(" + convertTermToString(term.left) + " → " + convertTermToString(term.right) + ")"
 		}
 		
-		if (term instanceof WTerm) {
-			return "W(" + convertTermToString(term.term) + ")"
-		}
+//		if (term instanceof WTerm) {
+//			return "W(" + convertTermToString(term.term) + ")"
+//		}
 		
 		if (term instanceof FTerm) {
 			return "F(" + convertTermToString(term.term) + ")"
@@ -999,8 +999,8 @@ class TermToStringConverter {
 			return "G(" + convertTermToString(term.term) + ")"
 		}
 		
-		if (term instanceof UTerm) {
-			return "(" + convertTermToString(term.left) + " U " + convertTermToString(term.right) + ")"
+		if (term instanceof WTerm) {
+			return "(" + convertTermToString(term.left) + " W " + convertTermToString(term.right) + ")"
 		}
 		
 		if (term instanceof BoolTerm) {
@@ -1233,14 +1233,17 @@ class ImplTerm implements Term {
 }
 
 class WTerm implements Term {
-	public Term term
+	public Term left
+	public Term right
 	
-	new (Term term) {
-		this.term = term
+	new (Term l, Term r) {
+		this.left = l
+		this.right = r
 	}
 	
-	new (WTerm wTerm) {
-		this.term = wTerm.term !== null ? wTerm.term.copy() : null
+	new (WTerm term) {
+		this.left = term.left !== null ? term.left.copy() : null
+		this.right = term.right !== null ? term.right.copy() : null
 	}
 	
 	override WTerm copy() {
@@ -1251,9 +1254,10 @@ class WTerm implements Term {
 	    if (this === o) return true
 	    if (o === null || getClass() != o.getClass()) return false
 	
-	    var that = o as WTerm
+	    var that = o as UTerm
 	    
-	    return Objects.equals(term, that.term)
+	    return Objects.equals(left, that.left)
+	    	&& Objects.equals(right, that.right)
 	}
 	
 	override hashCode() {
