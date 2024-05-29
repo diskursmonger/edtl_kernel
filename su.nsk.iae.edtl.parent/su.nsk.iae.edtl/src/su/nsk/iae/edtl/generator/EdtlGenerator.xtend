@@ -459,12 +459,12 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			}
 		}
 		
-		// a U a = a
+		// a W a = a
 		if (left.equals(right)) {
 			return left
 		}
 		
-		// ¬a U a = F(a)
+		// ¬a W a = F(a)
 		if (left instanceof NotTerm) {
 			if (left.term.equals(right)) {
 				return future(right)
@@ -475,7 +475,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 //			return future(right)
 //		}
 		
-		// ¬a U (b ∨ a) = F(a) ∨ (¬a U b)
+		// ¬a W (b ∨ a) = F(a) ∨ (¬a W b)
 		if (left instanceof NotTerm) {
 			if (right instanceof OrTerm) {
 				if (left.term.equals(right.right)) {
@@ -492,7 +492,7 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 //			}
 //		}
 		
-		// (a ∧ b) U (c ∨ a) = a ∨ ((a ∧ b) U c)
+		// (a ∧ b) W (c ∨ a) = a ∨ ((a ∧ b) W c)
 		if (left instanceof AndTerm) {
 			if (right instanceof OrTerm) {
 				if (left.left.equals(right.right)) {
@@ -501,21 +501,21 @@ class EdtlGenerator extends AbstractGenerator implements IEdtlGenerator {
 			}
 		}
 		
-		// (a ∧ b) U a = a
+		// (a ∧ b) W a = a
 		if (left instanceof AndTerm) {
 			if (left.left.equals(right)) {
 				return right
 			}
 		}
 		
-		// a U (b ∨ a) = a ∨ (a U b)
+		// a W (b ∨ a) = a ∨ (a W b)
 		if (right instanceof OrTerm) {
 			if (left.equals(right.right)) {
 				return dis(left, wuntil(left, right.left))
 			}
 		}
 		
-		// (a ∧ ¬b) U (b ∧ a) = a U (b ∧ a)
+		// (a ∧ ¬b) W (b ∧ a) = a W (b ∧ a)
 		if (left instanceof AndTerm) {
 			if (right instanceof AndTerm) {
 				if (left.left.equals(right.right)) {
