@@ -48,33 +48,74 @@ class CGenerator {
 	private def compile(Model ast)'''
 		«compileIncludes()»
 		
-		«compileVars(ast.declVarInput, ast.declVarOutput)»
-		
-		«compileRandBool()»
-		
-		«compileInitVars(ast.declVarInput, ast.declVarOutput)»
-		
-		«compileUpdateVars(ast.declVarInput, ast.declVarOutput)»
+		«compileTimeFunctions()»
 		
 		«compileEdtlOperators()»
 		
-		«compileStructRequirement()»
+		«compileVars(ast.declVarInput, ast.declVarOutput)»
 		
-		«compileCalcAttrs(ast.reqs)»
+		«compileRequirementCheckContext()»
 		
-		«compileCheckRequirements(ast.reqs)»
+		«compileGeneralRequirementCheckFunction()»
 		
-		«compileAlgorithm()»
-		
-		«compileMain(ast.reqs)»
+		«compileSpecificRequirementCheckFunctions(ast.reqs)»
 	'''
 	
 	private def compileIncludes() '''
-	#include <stdio.h>
-	#include <stdbool.h>
-	#include <stdlib.h>
-	#include <time.h>
-	'''
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+'''
+	
+	private def compileTimeFunctions() '''
+///////////////////////////////////////////////////
+///////////////// TIME FUNCTIONS //////////////////
+///////////////////////////////////////////////////
+
+#ifdef __WIN32__
+
+#include <time.h>
+
+uint64_t get_epoch_millis() {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000
+}
+
+#else
+
+#include <sys/time.h>
+
+uint64_t get_current_time_millis() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
+}
+
+#endif
+'''
+	
+	private def compileEdtlOperators() '''
+/////////////////////////////////////////////////////
+////////////////// EDTL OPERATORS ///////////////////
+/////////////////////////////////////////////////////
+
+bool re(bool prev_v, bool v) {
+    return !prev_v && v;
+}
+
+bool fe(bool prev_v, bool v) {
+    return prev_v && !v;
+}
+
+bool high(bool prev_v, bool v) {
+    return prev_v && v;
+}
+
+bool low(bool prev_v, bool v) {
+    return !prev_v && !v;
+}
+'''
 	
 	private def compileVars(EList<DeclVarInput> input, EList<DeclVarOutput> output){
 		var List<VarDeclaration> vars = newArrayList
@@ -109,125 +150,195 @@ class CGenerator {
 
 typedef struct vars {
 	«FOR varDecl : vars»
-		«varDecl.compileVariable»
+	bool «varDecl.v.name»;
 	«ENDFOR»
 } Vars;
 	'''
 	
-	private def compileVariable(VarDeclaration e) '''
-	bool «e.v.name»;
-	bool prev_«e.v.name»;
-	'''
-	
-	private def compileRandBool() '''
-	bool rand_bool() {
-	    return rand() % 2;
-	}
-	'''
-	
-	private def compileInitVars(EList<DeclVarInput> input, EList<DeclVarOutput> output) '''
-	void init_vars(Vars* vars) {
-	«IF input !== null»
-		«FOR declVarInput : input»
-			«IF declVarInput.varDecls !== null»
-				«FOR v : declVarInput.varDecls»
-					«"    "»vars->«v.v.name» = vars->prev_«v.v.name» = rand_bool();
-				«ENDFOR»
-			«ENDIF»
-		«ENDFOR»
-	«ENDIF»
-	«IF output !== null»
-		«FOR declVarOutput : output»
-			«IF declVarOutput.varDecls !== null»
-				«FOR v : declVarOutput.varDecls»
-					«"    "»vars->«v.v.name» = vars->prev_«v.v.name» = rand_bool();
-				«ENDFOR»
-			«ENDIF»
-		«ENDFOR»
-	«ENDIF»
-	}
-	'''
-	
-	private def compileUpdateVars(EList<DeclVarInput> input, EList<DeclVarOutput> output) '''
-	void update_vars(Vars* vars) {
-	«IF input !== null»
-		«FOR declVarInput : input»
-			«IF declVarInput.varDecls !== null»
-				«FOR v : declVarInput.varDecls»
-					«"    "»vars->prev_«v.v.name» = vars->«v.v.name»;
-					«"    "»vars->«v.v.name» = rand_bool();
-				«ENDFOR»
-			«ENDIF»
-		«ENDFOR»
-	«ENDIF»
-	«IF output !== null»
-		«FOR declVarOutput : output»
-			«IF declVarOutput.varDecls !== null»
-				«FOR v : declVarOutput.varDecls»
-					«"    "»vars->prev_«v.v.name» = vars->«v.v.name»;
-					«"    "»vars->«v.v.name» = rand_bool();
-				«ENDFOR»
-			«ENDIF»
-		«ENDFOR»
-	«ENDIF»
-	}
-	'''
-	
-	private def compileEdtlOperators() '''
-	/////////////////////////////////////////////////////
-	////////////////// EDTL OPERATORS ///////////////////
-	/////////////////////////////////////////////////////
-	
-	bool re(bool prev_v, bool v) {
-	    return prev_v && !v;
-	}
-	
-	bool fe(bool prev_v, bool v) {
-	    return !prev_v && v;
-	}
-	
-	bool high(bool prev_v, bool v) {
-	    return prev_v && v;
-	}
-	
-	bool low(bool prev_v, bool v) {
-	    return !prev_v && !v;
-	}
-	'''
-	
-	private def compileStructRequirement() '''
-	////////////////////////////////////////////////////////
-	///////////// REQUIREMENTS AND ATTRIBUTES //////////////
-	////////////////////////////////////////////////////////
-	
-	typedef struct requirement {
-	    bool trigger;
-	    bool invariant;
-	    bool final;
-	    bool delay;
-	    bool reaction;
-	    bool release;
-	} Requirement;
-	'''
-	
-	private def compileCalcAttrs(EList<Requirement> reqs) '''
+	private def compileRequirementCheckContext() '''
+//////////////////////////////////////////////////////
+///////////// REQUIREMENT CHECK CONTEXT //////////////
+//////////////////////////////////////////////////////
+
+typedef struct times {
+    uint64_t curr_time;
+    uint64_t prog_time;
+    uint64_t trigger_time;
+    uint64_t final_time;
+} Times;
+
+typedef struct requirement {
+    bool trigger;
+    bool invariant;
+    bool final;
+    bool delay;
+    bool reaction;
+    bool release;
+} Requirement;
+
+typedef enum state {
+    WAIT_TRIGGER,
+    WAIT_FINAL,
+    WAIT_DELAY
+} State;
+
+typedef struct context {
+    Vars vars;
+    Vars prev_vars;
+    bool vars_are_set;
+    Times times;
+    Requirement requirement;
+    State state;
+} Context;
+
+Context create_context() {
+    return (Context) {
+        .vars_are_set = false,
+        .times = { .prog_time = get_current_time_millis() },
+        .requirement = {},
+        .state = WAIT_TRIGGER,
+    };
+}
+
+void set_vars_to_context(Context* context, Vars vars) {
+    if (context->vars_are_set) {
+        context->prev_vars = context->vars;
+        context->vars = vars;
+    } else {
+        context->vars = context->prev_vars = vars;
+        context->vars_are_set = true;
+    }
+}
+
+void reset_context(Context* context) {
+    context->times = (Times) { .prog_time = context->times.prog_time };
+    context->requirement = (Requirement) {};
+    context->state = WAIT_TRIGGER;
+}
+'''
+
+	private def compileGeneralRequirementCheckFunction() '''
+////////////////////////////////////////////////////////////////
+///////////// GENERAL REQUIREMENT CHECK FUNCTION ///////////////
+////////////////////////////////////////////////////////////////
+
+typedef enum result {
+    SUCCESS,
+    FAIL,
+    CONTINUE
+} Result;
+
+Result check_requirement(Context* context, void (*calculate_requirement_attributes)(Context*)) {
+    Times* times = &context->times;
+    Requirement* requirement = &context->requirement;
+    times->curr_time = get_current_time_millis();
+
+    switch (context->state) {
+        case WAIT_TRIGGER: {
+            calculate_requirement_attributes(context);
+            if (!requirement->trigger) {
+                return CONTINUE;
+            }
+
+            context->state = WAIT_FINAL;
+            times->trigger_time = times->curr_time;
+        }
+
+        case WAIT_FINAL: {
+            calculate_requirement_attributes(context);
+            if (requirement->release) {
+                return SUCCESS;
+            }
+
+            if (!requirement->final) {
+                if (requirement->invariant) {
+                    return CONTINUE;
+                }
+
+                return FAIL;
+            }
+
+            context->state = WAIT_DELAY;
+            times->final_time = times->curr_time;
+        }
+
+        case WAIT_DELAY: {
+            calculate_requirement_attributes(context);
+            if (requirement->release) {
+                return SUCCESS;
+            }
+
+            if (requirement->delay) {
+                if (!requirement->invariant) {
+                    return FAIL;
+                }
+
+                if (!requirement->reaction) {
+                    return FAIL;
+                }
+
+                return SUCCESS;
+            }
+
+            if (!requirement->invariant) {
+                return FAIL;
+            }
+
+            if (requirement->reaction) {
+                return SUCCESS;
+            }
+
+            return CONTINUE;
+        }
+    }
+
+    return FAIL;
+}
+'''
+
+	private def compileSpecificRequirementCheckFunctions(EList<Requirement> reqs) '''
+	//////////////////////////////////////////////////////////////////
+	///////////// SPECIFIC REQUIREMENT CHECK FUNCTIONS ///////////////
+	//////////////////////////////////////////////////////////////////
+
 	«IF reqs !== null»
 		«FOR req : reqs»
-			«compileCalcAttrsFunction(req)»
+			«compileSpecificRequirementCheckFunction(req)»
 		«ENDFOR»
 	«ENDIF»
 	'''
 	
-	private def compileCalcAttrsFunction(Requirement req) '''
-	void calc_attrs_for_req_«req.name»(Requirement* req, Vars* vars) {
-	    req->trigger = «convertTriggerToCharSequence(req.trigExpr)»
-	    req->invariant = «convertInvariantToCharSequence(req.invExpr)»
-	    req->final = «convertFinalToCharSequence(req.finalExpr)»
-	    req->delay = «convertDelayToCharSequence(req.delayExpr)»
-	    req->reaction = «convertReactionToCharSequence(req.reacExpr)»
-	    req->release = «convertReleaseToCharSequence(req.relExpr)»
-	}
-	'''
+
+	private def compileSpecificRequirementCheckFunction(Requirement req) '''
+void calculate_attributes_for_«req.name»(Context* context) {
+    Vars* vars = &context->vars;
+    Vars* prev_vars = &context->prev_vars;
+    Times* times = &context->times;
+    Requirement* req = &context->requirement;
+
+    switch (context->state) {
+        case WAIT_DELAY: {
+            req->delay = «convertDelayToCharSequence(req.delayExpr)»
+            req->reaction = «convertReactionToCharSequence(req.reacExpr)»
+        }
+
+        case WAIT_FINAL: {
+            req->invariant = «convertInvariantToCharSequence(req.invExpr)»
+            req->final = «convertFinalToCharSequence(req.finalExpr)»
+            req->release = «convertReleaseToCharSequence(req.relExpr)»
+        }
+
+        case WAIT_TRIGGER: {
+            req->trigger = «convertTriggerToCharSequence(req.trigExpr)»
+        }
+    }
+}
+
+Result check_requirement_«req.name»(Context* context) {
+    return check_requirement(context, calculate_attributes_for_«req.name»);
+}
+
+'''
 	
 	private def convertTriggerToCharSequence(Expression expr) {
 		var trigger = ExprToTermConverter.convertOrDefault(expr, Attribute.TRIGGER, new BoolTerm(true))
@@ -259,179 +370,65 @@ typedef struct vars {
 		convertTermToCharSequence(release, false)
 	}
 
-	private def convertTermToCharSequence(Term term, Boolean needBreaks)'''
-	«convertTermToStringWithSemicolon(term, needBreaks)»
+	private def convertTermToCharSequence(Term term, Boolean needParentheses)'''
+	«convertTermToStringWithSemicolon(term, needParentheses)»
 	'''
 	
-	private def convertTermToStringWithSemicolon(Term term, Boolean needBreaks) {
-		return convertTermToString(term, needBreaks) + ";"
+	private def convertTermToStringWithSemicolon(Term term, Boolean needParentheses) {
+		return convertTermToString(term, needParentheses, false) + ";"
 	}
 	
-	private def String convertTermToString(Term term, Boolean needBreaks){
-		if (needBreaks) {
-			if (term instanceof OrTerm) {
-				return "(" + convertTermToString(term.left, true) + " || " + convertTermToString(term.right, true) + ")"
-			}
-			if (term instanceof AndTerm) {
-				return "(" + convertTermToString(term.left, true) + " && " + convertTermToString(term.right, true) + ")"
-			}
-		}
+	private def String convertTermToString(Term term, Boolean needParentheses, Boolean usePrevVars) {
 		if (term instanceof OrTerm) {
-			return convertTermToString(term.left, true) + " || " + convertTermToString(term.right, true)
+			var orString = convertTermToString(term.left, true, usePrevVars) + " || " + convertTermToString(term.right, true, usePrevVars)
+			return needParentheses ? "(" + orString + ")" : orString
 		}
 		if (term instanceof AndTerm) {
-			return convertTermToString(term.left, true) + " && " + convertTermToString(term.right, true)
+			var andString = convertTermToString(term.left, true, usePrevVars) + " && " + convertTermToString(term.right, true, usePrevVars)
+			return needParentheses ? "(" + andString + ")" : andString
 		}
 		if (term instanceof BoolTerm) {
 			return String.valueOf(term.value)
 		}
 		if (term instanceof VarTerm) {
-			return "vars->" + term.name
+			return (usePrevVars ? "prev_vars->" : "vars->") + term.name
 		}
 		if (term instanceof NotTerm) {
-			return "!" + convertTermToString(term.term, true)
+			return "!" + convertTermToString(term.term, true, usePrevVars)
 		}
 		if (term instanceof FeTerm) {
-			var termTerm = term.term
-			if (termTerm instanceof VarTerm) {
-				return "fe(vars->prev_" + termTerm.name + ", vars->" + termTerm.name + ")"
-			}
+			return "fe(" + convertTermToString(term.term, false, true) + ", " + convertTermToString(term.term, false, false) + ")"
 		}
 		if (term instanceof ReTerm) {
-			var termTerm = term.term
-			if (termTerm instanceof VarTerm) {
-				return "re(vars->prev_" + termTerm.name + ", vars->" + termTerm.name + ")"
-			}
+			return "re(" + convertTermToString(term.term, false, true) + ", " + convertTermToString(term.term, false, false) + ")"
 		}
 		if (term instanceof HighTerm) {
-			var termTerm = term.term
-			if (termTerm instanceof VarTerm) {
-				return "high(vars->prev_" + termTerm.name + ", vars->" + termTerm.name + ")"
-			}
+			return "high(" + convertTermToString(term.term, false, true) + ", " + convertTermToString(term.term, false, false) + ")"
 		}
 		if (term instanceof LowTerm) {
-			var termTerm = term.term
-			if (termTerm instanceof VarTerm) {
-				return "low(vars->prev_" + termTerm.name + ", vars->" + termTerm.name + ")"
-			}
+			return "low(" + convertTermToString(term.term, false, true) + ", " + convertTermToString(term.term, false, false) + ")"
 		}
 		if (term instanceof TimeTerm) {
-			return "TAU"
+			return buildTimeIntervalString(term.interval, term.attribute, needParentheses)
+		}
+		if (term instanceof NestTerm) {
+			return convertTermToString(term.term, needParentheses, usePrevVars)
 		}
 	}
 	
-	private def compileCheckRequirements(EList<Requirement> reqs) '''
-	//////////////////////////////////////////////////////
-	///////////// REQUIREMENTS VERIFICATION //////////////
-	//////////////////////////////////////////////////////
-	
-	bool check_requirement(void (*calc_attrs)(Requirement*, Vars*));
-	
-	«IF reqs !== null»
-		«FOR req : reqs»
-			«compileCheckRequirement(req)»
-		«ENDFOR»
-	«ENDIF»
-	'''
-	
-	private def compileCheckRequirement(Requirement req) '''
-	bool check_requirement_«req.name»() {
-	    return check_requirement(calc_attrs_for_req_«req.name»);
+	private def String buildTimeIntervalString(String timeInterval, Attribute attribute, Boolean needParentheses) {
+		var timeIntervalMillis = TimeIntervalParser.parseTimeIntervalToMillis(timeInterval)
+		
+		var timeValue = switch (attribute) {
+			case TRIGGER: "times->prog_time"
+			case INVARIANT: "times->trigger_time"
+			case FINAL: "times->trigger_time"
+			case DELAY: "times->final_time"
+			case REACTION: "times->final_time"
+			case RELEASE: "times->trigger_time"
+		}
+		
+		var timeIntervalString = "times->curr_time >= " + timeValue + " + " + timeIntervalMillis
+		return needParentheses ? "(" + timeIntervalString + ")" : timeIntervalString
 	}
-	'''
-	
-	private def compileAlgorithm()'''
-	bool a(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*));
-	bool b(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*));
-	
-	bool check_requirement(void (*calc_attrs)(Requirement*, Vars*)) {
-	    Vars vars;
-	    Requirement req;
-	    init_vars(&vars);
-	    while(true) {
-	        calc_attrs(&req, &vars);
-	        if (!req.trigger) {
-	            update_vars(&vars);
-	            continue;
-	        }
-	
-	        return a(&req, &vars, calc_attrs);
-	    }
-	}
-	
-	bool a(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*)) {
-	    while (true) {
-	        if (req->release) {
-	            return true;
-	        }
-	
-	        if (req->final) {
-	            return b(req, vars, calc_attrs);
-	        }
-	
-	        if (!req->invariant) {
-	            printf("a(): not final and not invariant\n");
-	            return false;
-	        }
-	
-	        update_vars(vars);
-	        calc_attrs(req, vars);
-	    }
-	}
-	
-	bool b(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*)) {
-	    while (true) {
-	        if (req->delay) {
-	            if (!req->invariant) {
-	                printf("b(): delay, but not invariant\n");
-	                return false;
-	            }
-	
-	            if (!req->reaction) {
-	                printf("b(): delay, but not reaction\n");
-	                return false;
-	            }
-	
-	            return true;
-	        }
-	
-	        if (!req->invariant) {
-	            printf("b(): not delay and not invariant\n");
-	            return false;
-	        }
-	
-	        if (req->reaction) {
-	            return true;
-	        }
-	
-	        update_vars(vars);
-	        calc_attrs(req, vars);
-	
-	        if (req->release) {
-	            return true;
-	        }
-	    }
-	}
-	
-	void verify_requirement(char* req_name, bool (*check_req)(void)) {
-	    printf("Verifying requirement \'%s\'\n", req_name);
-	    bool success = check_req();
-	    if (success) {
-	        printf("Verification for requirement \'%s\' has succeeded", req_name);
-	    } else {
-	        printf("Verification for requirement \'%s\' has failed", req_name);
-	    }
-	
-	    printf("\n\n");
-	}
-	'''
-	
-	private def compileMain(EList<Requirement> reqs) '''
-	int main(int argc, char *argv[]) {
-	    srand(time(NULL)); 
-	    «FOR req : reqs»
-	    	verify_requirement("«req.name»", check_requirement_«req.name»);
-	    «ENDFOR»
-	}
-	'''
 }

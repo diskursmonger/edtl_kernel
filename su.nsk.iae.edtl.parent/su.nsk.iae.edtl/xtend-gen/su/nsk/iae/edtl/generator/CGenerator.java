@@ -34,44 +34,28 @@ public class CGenerator {
     _builder.append(_compileIncludes);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
-    CharSequence _compileVars = this.compileVars(ast.getDeclVarInput(), ast.getDeclVarOutput());
-    _builder.append(_compileVars);
-    _builder.newLineIfNotEmpty();
-    _builder.newLine();
-    CharSequence _compileRandBool = this.compileRandBool();
-    _builder.append(_compileRandBool);
-    _builder.newLineIfNotEmpty();
-    _builder.newLine();
-    CharSequence _compileInitVars = this.compileInitVars(ast.getDeclVarInput(), ast.getDeclVarOutput());
-    _builder.append(_compileInitVars);
-    _builder.newLineIfNotEmpty();
-    _builder.newLine();
-    CharSequence _compileUpdateVars = this.compileUpdateVars(ast.getDeclVarInput(), ast.getDeclVarOutput());
-    _builder.append(_compileUpdateVars);
+    CharSequence _compileTimeFunctions = this.compileTimeFunctions();
+    _builder.append(_compileTimeFunctions);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
     CharSequence _compileEdtlOperators = this.compileEdtlOperators();
     _builder.append(_compileEdtlOperators);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
-    CharSequence _compileStructRequirement = this.compileStructRequirement();
-    _builder.append(_compileStructRequirement);
+    CharSequence _compileVars = this.compileVars(ast.getDeclVarInput(), ast.getDeclVarOutput());
+    _builder.append(_compileVars);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
-    CharSequence _compileCalcAttrs = this.compileCalcAttrs(ast.getReqs());
-    _builder.append(_compileCalcAttrs);
+    CharSequence _compileRequirementCheckContext = this.compileRequirementCheckContext();
+    _builder.append(_compileRequirementCheckContext);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
-    CharSequence _compileCheckRequirements = this.compileCheckRequirements(ast.getReqs());
-    _builder.append(_compileCheckRequirements);
+    CharSequence _compileGeneralRequirementCheckFunction = this.compileGeneralRequirementCheckFunction();
+    _builder.append(_compileGeneralRequirementCheckFunction);
     _builder.newLineIfNotEmpty();
     _builder.newLine();
-    CharSequence _compileAlgorithm = this.compileAlgorithm();
-    _builder.append(_compileAlgorithm);
-    _builder.newLineIfNotEmpty();
-    _builder.newLine();
-    CharSequence _compileMain = this.compileMain(ast.getReqs());
-    _builder.append(_compileMain);
+    CharSequence _compileSpecificRequirementCheckFunctions = this.compileSpecificRequirementCheckFunctions(ast.getReqs());
+    _builder.append(_compileSpecificRequirementCheckFunctions);
     _builder.newLineIfNotEmpty();
     return _builder;
   }
@@ -84,7 +68,102 @@ public class CGenerator {
     _builder.newLine();
     _builder.append("#include <stdlib.h>");
     _builder.newLine();
+    return _builder;
+  }
+
+  private CharSequence compileTimeFunctions() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("///////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.append("///////////////// TIME FUNCTIONS //////////////////");
+    _builder.newLine();
+    _builder.append("///////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("#ifdef __WIN32__");
+    _builder.newLine();
+    _builder.newLine();
     _builder.append("#include <time.h>");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("uint64_t get_epoch_millis() {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("struct timespec ts;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("timespec_get(&ts, TIME_UTC);");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("#else");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("#include <sys/time.h>");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("uint64_t get_current_time_millis() {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("struct timeval tv;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("gettimeofday(&tv, NULL);");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("#endif");
+    _builder.newLine();
+    return _builder;
+  }
+
+  private CharSequence compileEdtlOperators() {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("/////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.append("////////////////// EDTL OPERATORS ///////////////////");
+    _builder.newLine();
+    _builder.append("/////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("bool re(bool prev_v, bool v) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return !prev_v && v;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("bool fe(bool prev_v, bool v) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return prev_v && !v;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("bool high(bool prev_v, bool v) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return prev_v && v;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("bool low(bool prev_v, bool v) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return !prev_v && !v;");
+    _builder.newLine();
+    _builder.append("}");
     _builder.newLine();
     return _builder;
   }
@@ -136,8 +215,10 @@ public class CGenerator {
     {
       for(final VarDeclaration varDecl : vars) {
         _builder.append("\t");
-        CharSequence _compileVariable = this.compileVariable(varDecl);
-        _builder.append(_compileVariable, "\t");
+        _builder.append("bool ");
+        String _name = varDecl.getV().getName();
+        _builder.append(_name, "\t");
+        _builder.append(";");
         _builder.newLineIfNotEmpty();
       }
     }
@@ -146,225 +227,30 @@ public class CGenerator {
     return _builder;
   }
 
-  private CharSequence compileVariable(final VarDeclaration e) {
+  private CharSequence compileRequirementCheckContext() {
     StringConcatenation _builder = new StringConcatenation();
-    _builder.append("bool ");
-    String _name = e.getV().getName();
-    _builder.append(_name);
-    _builder.append(";");
-    _builder.newLineIfNotEmpty();
-    _builder.append("bool prev_");
-    String _name_1 = e.getV().getName();
-    _builder.append(_name_1);
-    _builder.append(";");
-    _builder.newLineIfNotEmpty();
-    return _builder;
-  }
-
-  private CharSequence compileRandBool() {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("bool rand_bool() {");
+    _builder.append("//////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.append("///////////// REQUIREMENT CHECK CONTEXT //////////////");
+    _builder.newLine();
+    _builder.append("//////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("typedef struct times {");
     _builder.newLine();
     _builder.append("    ");
-    _builder.append("return rand() % 2;");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileInitVars(final EList<DeclVarInput> input, final EList<DeclVarOutput> output) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("void init_vars(Vars* vars) {");
-    _builder.newLine();
-    {
-      if ((input != null)) {
-        {
-          for(final DeclVarInput declVarInput : input) {
-            {
-              EList<VarDeclaration> _varDecls = declVarInput.getVarDecls();
-              boolean _tripleNotEquals = (_varDecls != null);
-              if (_tripleNotEquals) {
-                {
-                  EList<VarDeclaration> _varDecls_1 = declVarInput.getVarDecls();
-                  for(final VarDeclaration v : _varDecls_1) {
-                    _builder.append("    ");
-                    _builder.append("vars->");
-                    String _name = v.getV().getName();
-                    _builder.append(_name);
-                    _builder.append(" = vars->prev_");
-                    String _name_1 = v.getV().getName();
-                    _builder.append(_name_1);
-                    _builder.append(" = rand_bool();");
-                    _builder.newLineIfNotEmpty();
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    {
-      if ((output != null)) {
-        {
-          for(final DeclVarOutput declVarOutput : output) {
-            {
-              EList<VarDeclaration> _varDecls_2 = declVarOutput.getVarDecls();
-              boolean _tripleNotEquals_1 = (_varDecls_2 != null);
-              if (_tripleNotEquals_1) {
-                {
-                  EList<VarDeclaration> _varDecls_3 = declVarOutput.getVarDecls();
-                  for(final VarDeclaration v_1 : _varDecls_3) {
-                    _builder.append("    ");
-                    _builder.append("vars->");
-                    String _name_2 = v_1.getV().getName();
-                    _builder.append(_name_2);
-                    _builder.append(" = vars->prev_");
-                    String _name_3 = v_1.getV().getName();
-                    _builder.append(_name_3);
-                    _builder.append(" = rand_bool();");
-                    _builder.newLineIfNotEmpty();
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileUpdateVars(final EList<DeclVarInput> input, final EList<DeclVarOutput> output) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("void update_vars(Vars* vars) {");
-    _builder.newLine();
-    {
-      if ((input != null)) {
-        {
-          for(final DeclVarInput declVarInput : input) {
-            {
-              EList<VarDeclaration> _varDecls = declVarInput.getVarDecls();
-              boolean _tripleNotEquals = (_varDecls != null);
-              if (_tripleNotEquals) {
-                {
-                  EList<VarDeclaration> _varDecls_1 = declVarInput.getVarDecls();
-                  for(final VarDeclaration v : _varDecls_1) {
-                    _builder.append("    ");
-                    _builder.append("vars->prev_");
-                    String _name = v.getV().getName();
-                    _builder.append(_name);
-                    _builder.append(" = vars->");
-                    String _name_1 = v.getV().getName();
-                    _builder.append(_name_1);
-                    _builder.append(";");
-                    _builder.newLineIfNotEmpty();
-                    _builder.append("    ");
-                    _builder.append("vars->");
-                    String _name_2 = v.getV().getName();
-                    _builder.append(_name_2);
-                    _builder.append(" = rand_bool();");
-                    _builder.newLineIfNotEmpty();
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    {
-      if ((output != null)) {
-        {
-          for(final DeclVarOutput declVarOutput : output) {
-            {
-              EList<VarDeclaration> _varDecls_2 = declVarOutput.getVarDecls();
-              boolean _tripleNotEquals_1 = (_varDecls_2 != null);
-              if (_tripleNotEquals_1) {
-                {
-                  EList<VarDeclaration> _varDecls_3 = declVarOutput.getVarDecls();
-                  for(final VarDeclaration v_1 : _varDecls_3) {
-                    _builder.append("    ");
-                    _builder.append("vars->prev_");
-                    String _name_3 = v_1.getV().getName();
-                    _builder.append(_name_3);
-                    _builder.append(" = vars->");
-                    String _name_4 = v_1.getV().getName();
-                    _builder.append(_name_4);
-                    _builder.append(";");
-                    _builder.newLineIfNotEmpty();
-                    _builder.append("    ");
-                    _builder.append("vars->");
-                    String _name_5 = v_1.getV().getName();
-                    _builder.append(_name_5);
-                    _builder.append(" = rand_bool();");
-                    _builder.newLineIfNotEmpty();
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileEdtlOperators() {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("/////////////////////////////////////////////////////");
-    _builder.newLine();
-    _builder.append("////////////////// EDTL OPERATORS ///////////////////");
-    _builder.newLine();
-    _builder.append("/////////////////////////////////////////////////////");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool re(bool prev_v, bool v) {");
+    _builder.append("uint64_t curr_time;");
     _builder.newLine();
     _builder.append("    ");
-    _builder.append("return prev_v && !v;");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool fe(bool prev_v, bool v) {");
+    _builder.append("uint64_t prog_time;");
     _builder.newLine();
     _builder.append("    ");
-    _builder.append("return !prev_v && v;");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool high(bool prev_v, bool v) {");
+    _builder.append("uint64_t trigger_time;");
     _builder.newLine();
     _builder.append("    ");
-    _builder.append("return prev_v && v;");
+    _builder.append("uint64_t final_time;");
     _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool low(bool prev_v, bool v) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("return !prev_v && !v;");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileStructRequirement() {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("////////////////////////////////////////////////////////");
-    _builder.newLine();
-    _builder.append("///////////// REQUIREMENTS AND ATTRIBUTES //////////////");
-    _builder.newLine();
-    _builder.append("////////////////////////////////////////////////////////");
+    _builder.append("} Times;");
     _builder.newLine();
     _builder.newLine();
     _builder.append("typedef struct requirement {");
@@ -389,17 +275,318 @@ public class CGenerator {
     _builder.newLine();
     _builder.append("} Requirement;");
     _builder.newLine();
+    _builder.newLine();
+    _builder.append("typedef enum state {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("WAIT_TRIGGER,");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("WAIT_FINAL,");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("WAIT_DELAY");
+    _builder.newLine();
+    _builder.append("} State;");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("typedef struct context {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Vars vars;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Vars prev_vars;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("bool vars_are_set;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Times times;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Requirement requirement;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("State state;");
+    _builder.newLine();
+    _builder.append("} Context;");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("Context create_context() {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return (Context) {");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append(".vars_are_set = false,");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append(".times = { .prog_time = get_current_time_millis() },");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append(".requirement = {},");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append(".state = WAIT_TRIGGER,");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("};");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("void set_vars_to_context(Context* context, Vars vars) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("if (context->vars_are_set) {");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("context->prev_vars = context->vars;");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("context->vars = vars;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("} else {");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("context->vars = context->prev_vars = vars;");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("context->vars_are_set = true;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("void reset_context(Context* context) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("context->times = (Times) { .prog_time = context->times.prog_time };");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("context->requirement = (Requirement) {};");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("context->state = WAIT_TRIGGER;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
     return _builder;
   }
 
-  private CharSequence compileCalcAttrs(final EList<Requirement> reqs) {
+  private CharSequence compileGeneralRequirementCheckFunction() {
     StringConcatenation _builder = new StringConcatenation();
+    _builder.append("////////////////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.append("///////////// GENERAL REQUIREMENT CHECK FUNCTION ///////////////");
+    _builder.newLine();
+    _builder.append("////////////////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("typedef enum result {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("SUCCESS,");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("FAIL,");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("CONTINUE");
+    _builder.newLine();
+    _builder.append("} Result;");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("Result check_requirement(Context* context, void (*calculate_requirement_attributes)(Context*)) {");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Times* times = &context->times;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("Requirement* requirement = &context->requirement;");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("times->curr_time = get_current_time_millis();");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("switch (context->state) {");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_TRIGGER: {");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("calculate_requirement_attributes(context);");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (!requirement->trigger) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return CONTINUE;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("context->state = WAIT_FINAL;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("times->trigger_time = times->curr_time;");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_FINAL: {");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("calculate_requirement_attributes(context);");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (requirement->release) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return SUCCESS;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (!requirement->final) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("if (requirement->invariant) {");
+    _builder.newLine();
+    _builder.append("                    ");
+    _builder.append("return CONTINUE;");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return FAIL;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("context->state = WAIT_DELAY;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("times->final_time = times->curr_time;");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_DELAY: {");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("calculate_requirement_attributes(context);");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (requirement->release) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return SUCCESS;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (requirement->delay) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("if (!requirement->invariant) {");
+    _builder.newLine();
+    _builder.append("                    ");
+    _builder.append("return FAIL;");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("if (!requirement->reaction) {");
+    _builder.newLine();
+    _builder.append("                    ");
+    _builder.append("return FAIL;");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return SUCCESS;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (!requirement->invariant) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return FAIL;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("if (requirement->reaction) {");
+    _builder.newLine();
+    _builder.append("                ");
+    _builder.append("return SUCCESS;");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("return CONTINUE;");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("return FAIL;");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    return _builder;
+  }
+
+  private CharSequence compileSpecificRequirementCheckFunctions(final EList<Requirement> reqs) {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("//////////////////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.append("///////////// SPECIFIC REQUIREMENT CHECK FUNCTIONS ///////////////");
+    _builder.newLine();
+    _builder.append("//////////////////////////////////////////////////////////////////");
+    _builder.newLine();
+    _builder.newLine();
     {
       if ((reqs != null)) {
         {
           for(final Requirement req : reqs) {
-            CharSequence _compileCalcAttrsFunction = this.compileCalcAttrsFunction(req);
-            _builder.append(_compileCalcAttrsFunction);
+            CharSequence _compileSpecificRequirementCheckFunction = this.compileSpecificRequirementCheckFunction(req);
+            _builder.append(_compileSpecificRequirementCheckFunction);
             _builder.newLineIfNotEmpty();
           }
         }
@@ -408,44 +595,98 @@ public class CGenerator {
     return _builder;
   }
 
-  private CharSequence compileCalcAttrsFunction(final Requirement req) {
+  private CharSequence compileSpecificRequirementCheckFunction(final Requirement req) {
     StringConcatenation _builder = new StringConcatenation();
-    _builder.append("void calc_attrs_for_req_");
+    _builder.append("void calculate_attributes_for_");
     String _name = req.getName();
     _builder.append(_name);
-    _builder.append("(Requirement* req, Vars* vars) {");
+    _builder.append("(Context* context) {");
     _builder.newLineIfNotEmpty();
     _builder.append("    ");
-    _builder.append("req->trigger = ");
-    CharSequence _convertTriggerToCharSequence = this.convertTriggerToCharSequence(req.getTrigExpr());
-    _builder.append(_convertTriggerToCharSequence, "    ");
-    _builder.newLineIfNotEmpty();
+    _builder.append("Vars* vars = &context->vars;");
+    _builder.newLine();
     _builder.append("    ");
-    _builder.append("req->invariant = ");
-    CharSequence _convertInvariantToCharSequence = this.convertInvariantToCharSequence(req.getInvExpr());
-    _builder.append(_convertInvariantToCharSequence, "    ");
-    _builder.newLineIfNotEmpty();
+    _builder.append("Vars* prev_vars = &context->prev_vars;");
+    _builder.newLine();
     _builder.append("    ");
-    _builder.append("req->final = ");
-    CharSequence _convertFinalToCharSequence = this.convertFinalToCharSequence(req.getFinalExpr());
-    _builder.append(_convertFinalToCharSequence, "    ");
-    _builder.newLineIfNotEmpty();
+    _builder.append("Times* times = &context->times;");
+    _builder.newLine();
     _builder.append("    ");
+    _builder.append("Requirement* req = &context->requirement;");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("switch (context->state) {");
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_DELAY: {");
+    _builder.newLine();
+    _builder.append("            ");
     _builder.append("req->delay = ");
     CharSequence _convertDelayToCharSequence = this.convertDelayToCharSequence(req.getDelayExpr());
-    _builder.append(_convertDelayToCharSequence, "    ");
+    _builder.append(_convertDelayToCharSequence, "            ");
     _builder.newLineIfNotEmpty();
-    _builder.append("    ");
+    _builder.append("            ");
     _builder.append("req->reaction = ");
     CharSequence _convertReactionToCharSequence = this.convertReactionToCharSequence(req.getReacExpr());
-    _builder.append(_convertReactionToCharSequence, "    ");
+    _builder.append(_convertReactionToCharSequence, "            ");
     _builder.newLineIfNotEmpty();
-    _builder.append("    ");
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_FINAL: {");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("req->invariant = ");
+    CharSequence _convertInvariantToCharSequence = this.convertInvariantToCharSequence(req.getInvExpr());
+    _builder.append(_convertInvariantToCharSequence, "            ");
+    _builder.newLineIfNotEmpty();
+    _builder.append("            ");
+    _builder.append("req->final = ");
+    CharSequence _convertFinalToCharSequence = this.convertFinalToCharSequence(req.getFinalExpr());
+    _builder.append(_convertFinalToCharSequence, "            ");
+    _builder.newLineIfNotEmpty();
+    _builder.append("            ");
     _builder.append("req->release = ");
     CharSequence _convertReleaseToCharSequence = this.convertReleaseToCharSequence(req.getRelExpr());
-    _builder.append(_convertReleaseToCharSequence, "    ");
+    _builder.append(_convertReleaseToCharSequence, "            ");
+    _builder.newLineIfNotEmpty();
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("        ");
+    _builder.append("case WAIT_TRIGGER: {");
+    _builder.newLine();
+    _builder.append("            ");
+    _builder.append("req->trigger = ");
+    CharSequence _convertTriggerToCharSequence = this.convertTriggerToCharSequence(req.getTrigExpr());
+    _builder.append(_convertTriggerToCharSequence, "            ");
+    _builder.newLineIfNotEmpty();
+    _builder.append("        ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.append("    ");
+    _builder.append("}");
+    _builder.newLine();
+    _builder.append("}");
+    _builder.newLine();
+    _builder.newLine();
+    _builder.append("Result check_requirement_");
+    String _name_1 = req.getName();
+    _builder.append(_name_1);
+    _builder.append("(Context* context) {");
+    _builder.newLineIfNotEmpty();
+    _builder.append("    ");
+    _builder.append("return check_requirement(context, calculate_attributes_for_");
+    String _name_2 = req.getName();
+    _builder.append(_name_2, "    ");
+    _builder.append(");");
     _builder.newLineIfNotEmpty();
     _builder.append("}");
+    _builder.newLine();
     _builder.newLine();
     return _builder;
   }
@@ -510,370 +751,138 @@ public class CGenerator {
     return _xblockexpression;
   }
 
-  private CharSequence convertTermToCharSequence(final Term term, final Boolean needBreaks) {
+  private CharSequence convertTermToCharSequence(final Term term, final Boolean needParentheses) {
     StringConcatenation _builder = new StringConcatenation();
-    String _convertTermToStringWithSemicolon = this.convertTermToStringWithSemicolon(term, needBreaks);
+    String _convertTermToStringWithSemicolon = this.convertTermToStringWithSemicolon(term, needParentheses);
     _builder.append(_convertTermToStringWithSemicolon);
     _builder.newLineIfNotEmpty();
     return _builder;
   }
 
-  private String convertTermToStringWithSemicolon(final Term term, final Boolean needBreaks) {
-    String _convertTermToString = this.convertTermToString(term, needBreaks);
+  private String convertTermToStringWithSemicolon(final Term term, final Boolean needParentheses) {
+    String _convertTermToString = this.convertTermToString(term, needParentheses, Boolean.valueOf(false));
     return (_convertTermToString + ";");
   }
 
-  private String convertTermToString(final Term term, final Boolean needBreaks) {
-    if ((needBreaks).booleanValue()) {
-      if ((term instanceof OrTerm)) {
-        String _convertTermToString = this.convertTermToString(((OrTerm)term).left, Boolean.valueOf(true));
-        String _plus = ("(" + _convertTermToString);
-        String _plus_1 = (_plus + " || ");
-        String _convertTermToString_1 = this.convertTermToString(((OrTerm)term).right, Boolean.valueOf(true));
-        String _plus_2 = (_plus_1 + _convertTermToString_1);
-        return (_plus_2 + ")");
-      }
-      if ((term instanceof AndTerm)) {
-        String _convertTermToString_2 = this.convertTermToString(((AndTerm)term).left, Boolean.valueOf(true));
-        String _plus_3 = ("(" + _convertTermToString_2);
-        String _plus_4 = (_plus_3 + " && ");
-        String _convertTermToString_3 = this.convertTermToString(((AndTerm)term).right, Boolean.valueOf(true));
-        String _plus_5 = (_plus_4 + _convertTermToString_3);
-        return (_plus_5 + ")");
-      }
-    }
+  private String convertTermToString(final Term term, final Boolean needParentheses, final Boolean usePrevVars) {
     if ((term instanceof OrTerm)) {
-      String _convertTermToString_4 = this.convertTermToString(((OrTerm)term).left, Boolean.valueOf(true));
-      String _plus_6 = (_convertTermToString_4 + " || ");
-      String _convertTermToString_5 = this.convertTermToString(((OrTerm)term).right, Boolean.valueOf(true));
-      return (_plus_6 + _convertTermToString_5);
+      String _convertTermToString = this.convertTermToString(((OrTerm)term).left, Boolean.valueOf(true), usePrevVars);
+      String _plus = (_convertTermToString + " || ");
+      String _convertTermToString_1 = this.convertTermToString(((OrTerm)term).right, Boolean.valueOf(true), usePrevVars);
+      String orString = (_plus + _convertTermToString_1);
+      String _xifexpression = null;
+      if ((needParentheses).booleanValue()) {
+        _xifexpression = (("(" + orString) + ")");
+      } else {
+        _xifexpression = orString;
+      }
+      return _xifexpression;
     }
     if ((term instanceof AndTerm)) {
-      String _convertTermToString_6 = this.convertTermToString(((AndTerm)term).left, Boolean.valueOf(true));
-      String _plus_7 = (_convertTermToString_6 + " && ");
-      String _convertTermToString_7 = this.convertTermToString(((AndTerm)term).right, Boolean.valueOf(true));
-      return (_plus_7 + _convertTermToString_7);
+      String _convertTermToString_2 = this.convertTermToString(((AndTerm)term).left, Boolean.valueOf(true), usePrevVars);
+      String _plus_1 = (_convertTermToString_2 + " && ");
+      String _convertTermToString_3 = this.convertTermToString(((AndTerm)term).right, Boolean.valueOf(true), usePrevVars);
+      String andString = (_plus_1 + _convertTermToString_3);
+      String _xifexpression_1 = null;
+      if ((needParentheses).booleanValue()) {
+        _xifexpression_1 = (("(" + andString) + ")");
+      } else {
+        _xifexpression_1 = andString;
+      }
+      return _xifexpression_1;
     }
     if ((term instanceof BoolTerm)) {
       return String.valueOf(((BoolTerm)term).value);
     }
     if ((term instanceof VarTerm)) {
-      return ("vars->" + ((VarTerm)term).name);
+      String _xifexpression_2 = null;
+      if ((usePrevVars).booleanValue()) {
+        _xifexpression_2 = "prev_vars->";
+      } else {
+        _xifexpression_2 = "vars->";
+      }
+      return (_xifexpression_2 + ((VarTerm)term).name);
     }
     if ((term instanceof NotTerm)) {
-      String _convertTermToString_8 = this.convertTermToString(((NotTerm)term).term, Boolean.valueOf(true));
-      return ("!" + _convertTermToString_8);
+      String _convertTermToString_4 = this.convertTermToString(((NotTerm)term).term, Boolean.valueOf(true), usePrevVars);
+      return ("!" + _convertTermToString_4);
     }
     if ((term instanceof FeTerm)) {
-      Term termTerm = ((FeTerm)term).term;
-      if ((termTerm instanceof VarTerm)) {
-        return (((("fe(vars->prev_" + ((VarTerm)termTerm).name) + ", vars->") + ((VarTerm)termTerm).name) + ")");
-      }
+      String _convertTermToString_5 = this.convertTermToString(((FeTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(true));
+      String _plus_2 = ("fe(" + _convertTermToString_5);
+      String _plus_3 = (_plus_2 + ", ");
+      String _convertTermToString_6 = this.convertTermToString(((FeTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(false));
+      String _plus_4 = (_plus_3 + _convertTermToString_6);
+      return (_plus_4 + ")");
     }
     if ((term instanceof ReTerm)) {
-      Term termTerm_1 = ((ReTerm)term).term;
-      if ((termTerm_1 instanceof VarTerm)) {
-        return (((("re(vars->prev_" + ((VarTerm)termTerm_1).name) + ", vars->") + ((VarTerm)termTerm_1).name) + ")");
-      }
+      String _convertTermToString_7 = this.convertTermToString(((ReTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(true));
+      String _plus_5 = ("re(" + _convertTermToString_7);
+      String _plus_6 = (_plus_5 + ", ");
+      String _convertTermToString_8 = this.convertTermToString(((ReTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(false));
+      String _plus_7 = (_plus_6 + _convertTermToString_8);
+      return (_plus_7 + ")");
     }
     if ((term instanceof HighTerm)) {
-      Term termTerm_2 = ((HighTerm)term).term;
-      if ((termTerm_2 instanceof VarTerm)) {
-        return (((("high(vars->prev_" + ((VarTerm)termTerm_2).name) + ", vars->") + ((VarTerm)termTerm_2).name) + ")");
-      }
+      String _convertTermToString_9 = this.convertTermToString(((HighTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(true));
+      String _plus_8 = ("high(" + _convertTermToString_9);
+      String _plus_9 = (_plus_8 + ", ");
+      String _convertTermToString_10 = this.convertTermToString(((HighTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(false));
+      String _plus_10 = (_plus_9 + _convertTermToString_10);
+      return (_plus_10 + ")");
     }
     if ((term instanceof LowTerm)) {
-      Term termTerm_3 = ((LowTerm)term).term;
-      if ((termTerm_3 instanceof VarTerm)) {
-        return (((("low(vars->prev_" + ((VarTerm)termTerm_3).name) + ", vars->") + ((VarTerm)termTerm_3).name) + ")");
-      }
+      String _convertTermToString_11 = this.convertTermToString(((LowTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(true));
+      String _plus_11 = ("low(" + _convertTermToString_11);
+      String _plus_12 = (_plus_11 + ", ");
+      String _convertTermToString_12 = this.convertTermToString(((LowTerm)term).term, Boolean.valueOf(false), Boolean.valueOf(false));
+      String _plus_13 = (_plus_12 + _convertTermToString_12);
+      return (_plus_13 + ")");
     }
     if ((term instanceof TimeTerm)) {
-      return "TAU";
+      return this.buildTimeIntervalString(((TimeTerm)term).interval, ((TimeTerm)term).attribute, needParentheses);
+    }
+    if ((term instanceof NestTerm)) {
+      return this.convertTermToString(((NestTerm)term).term, needParentheses, usePrevVars);
     }
     return null;
   }
 
-  private CharSequence compileCheckRequirements(final EList<Requirement> reqs) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("//////////////////////////////////////////////////////");
-    _builder.newLine();
-    _builder.append("///////////// REQUIREMENTS VERIFICATION //////////////");
-    _builder.newLine();
-    _builder.append("//////////////////////////////////////////////////////");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool check_requirement(void (*calc_attrs)(Requirement*, Vars*));");
-    _builder.newLine();
-    _builder.newLine();
-    {
-      if ((reqs != null)) {
-        {
-          for(final Requirement req : reqs) {
-            CharSequence _compileCheckRequirement = this.compileCheckRequirement(req);
-            _builder.append(_compileCheckRequirement);
-            _builder.newLineIfNotEmpty();
-          }
-        }
+  private String buildTimeIntervalString(final String timeInterval, final Attribute attribute, final Boolean needParentheses) {
+    long timeIntervalMillis = TimeIntervalParser.parseTimeIntervalToMillis(timeInterval);
+    String _switchResult = null;
+    if (attribute != null) {
+      switch (attribute) {
+        case TRIGGER:
+          _switchResult = "times->prog_time";
+          break;
+        case INVARIANT:
+          _switchResult = "times->trigger_time";
+          break;
+        case FINAL:
+          _switchResult = "times->trigger_time";
+          break;
+        case DELAY:
+          _switchResult = "times->final_time";
+          break;
+        case REACTION:
+          _switchResult = "times->final_time";
+          break;
+        case RELEASE:
+          _switchResult = "times->trigger_time";
+          break;
+        default:
+          break;
       }
     }
-    return _builder;
-  }
-
-  private CharSequence compileCheckRequirement(final Requirement req) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("bool check_requirement_");
-    String _name = req.getName();
-    _builder.append(_name);
-    _builder.append("() {");
-    _builder.newLineIfNotEmpty();
-    _builder.append("    ");
-    _builder.append("return check_requirement(calc_attrs_for_req_");
-    String _name_1 = req.getName();
-    _builder.append(_name_1, "    ");
-    _builder.append(");");
-    _builder.newLineIfNotEmpty();
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileAlgorithm() {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("bool a(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*));");
-    _builder.newLine();
-    _builder.append("bool b(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*));");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool check_requirement(void (*calc_attrs)(Requirement*, Vars*)) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("Vars vars;");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("Requirement req;");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("init_vars(&vars);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("while(true) {");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("calc_attrs(&req, &vars);");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (!req.trigger) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("update_vars(&vars);");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("continue;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("return a(&req, &vars, calc_attrs);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool a(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*)) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("while (true) {");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (req->release) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return true;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (req->final) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return b(req, vars, calc_attrs);");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (!req->invariant) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("printf(\"a(): not final and not invariant\\n\");");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return false;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("update_vars(vars);");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("calc_attrs(req, vars);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("bool b(Requirement* req, Vars* vars, void (*calc_attrs)(Requirement*, Vars*)) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("while (true) {");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (req->delay) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("if (!req->invariant) {");
-    _builder.newLine();
-    _builder.append("                ");
-    _builder.append("printf(\"b(): delay, but not invariant\\n\");");
-    _builder.newLine();
-    _builder.append("                ");
-    _builder.append("return false;");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("if (!req->reaction) {");
-    _builder.newLine();
-    _builder.append("                ");
-    _builder.append("printf(\"b(): delay, but not reaction\\n\");");
-    _builder.newLine();
-    _builder.append("                ");
-    _builder.append("return false;");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return true;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (!req->invariant) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("printf(\"b(): not delay and not invariant\\n\");");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return false;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (req->reaction) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return true;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("update_vars(vars);");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("calc_attrs(req, vars);");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("if (req->release) {");
-    _builder.newLine();
-    _builder.append("            ");
-    _builder.append("return true;");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("void verify_requirement(char* req_name, bool (*check_req)(void)) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("printf(\"Verifying requirement \\\'%s\\\'\\n\", req_name);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("bool success = check_req();");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("if (success) {");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("printf(\"Verification for requirement \\\'%s\\\' has succeeded\", req_name);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("} else {");
-    _builder.newLine();
-    _builder.append("        ");
-    _builder.append("printf(\"Verification for requirement \\\'%s\\\' has failed\", req_name);");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("}");
-    _builder.newLine();
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("printf(\"\\n\\n\");");
-    _builder.newLine();
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
-  }
-
-  private CharSequence compileMain(final EList<Requirement> reqs) {
-    StringConcatenation _builder = new StringConcatenation();
-    _builder.append("int main(int argc, char *argv[]) {");
-    _builder.newLine();
-    _builder.append("    ");
-    _builder.append("srand(time(NULL)); ");
-    _builder.newLine();
-    {
-      for(final Requirement req : reqs) {
-        _builder.append("    ");
-        _builder.append("verify_requirement(\"");
-        String _name = req.getName();
-        _builder.append(_name, "    ");
-        _builder.append("\", check_requirement_");
-        String _name_1 = req.getName();
-        _builder.append(_name_1, "    ");
-        _builder.append(");");
-        _builder.newLineIfNotEmpty();
-      }
+    String timeValue = _switchResult;
+    String timeIntervalString = ((("times->curr_time >= " + timeValue) + " + ") + Long.valueOf(timeIntervalMillis));
+    String _xifexpression = null;
+    if ((needParentheses).booleanValue()) {
+      _xifexpression = (("(" + timeIntervalString) + ")");
+    } else {
+      _xifexpression = timeIntervalString;
     }
-    _builder.append("}");
-    _builder.newLine();
-    return _builder;
+    return _xifexpression;
   }
 }
